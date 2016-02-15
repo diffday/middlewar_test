@@ -1,7 +1,7 @@
 /*
  * msgq_manager.h
  *
- *  Created on: 2015Äê12ÔÂ15ÈÕ
+ *  Created on: 2015å¹´12æœˆ15æ—¥
  *      Author: chenzhuo
  */
 

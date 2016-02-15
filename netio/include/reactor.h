@@ -1,7 +1,7 @@
 /*
  * reactor.h
  *
- *  Created on: 2015Äê12ÔÂ22ÈÕ
+ *  Created on: 2015å¹´12æœˆ22æ—¥
  *      Author: chenzhuo
  */
 
@@ -43,7 +43,7 @@ public:
 	CReactor();
 	~CReactor();
 public:
-	int Init(int iPort); //´Ë´¦ÎÒÃÇÄ¬ÈÏ³õÊ¼»¯tcp svr·şÎñ
+	int Init(int iPort); //æ­¤å¤„æˆ‘ä»¬é»˜è®¤åˆå§‹åŒ–tcp svræœåŠ¡
 	int RegisterTcpNetHandler(CTcpNetHandler* pTcpNetHandler);
 
 	void RunEventLoop();
@@ -62,7 +62,7 @@ private:
 	int m_iBufLen;
 	bool m_bInit;
 	static const int MAX_EPOLL_EVENT_NUM = 4096;
-	static const int DEFAULT_EPOLL_WAIT_TIME = 10;//ºÁÃë
+	static const int DEFAULT_EPOLL_WAIT_TIME = 10;//æ¯«ç§’
 	int m_iEpFd;
 	epoll_event* m_aEpollEvents;
 	int m_nEvents;

@@ -1,7 +1,7 @@
 /*
  * service_loader.h
  *
- *  Created on: 2015Äê12ÔÂ21ÈÕ
+ *  Created on: 2015å¹´12æœˆ21æ—¥
  *      Author: chenzhuo
  */
 
@@ -24,7 +24,7 @@ private:
 	int LoadSercie_i(int iCmdId,const char* pszDLLName);
 
 private:
-	map<int,void*> m_mapHandlers; //Ã¿¸öÃüÁî×Ö¶ÔÓ¦µÄDLLµÄ´ò¿ª¾ä±ú
+	map<int,void*> m_mapHandlers; //æ¯ä¸ªå‘½ä»¤å­—å¯¹åº”çš„DLLçš„æ‰“å¼€å¥æŸ„
 };
 
 

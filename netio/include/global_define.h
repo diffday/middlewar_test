@@ -1,7 +1,7 @@
 /*
  * global_consts.h
  *
- *  Created on: 2015Äê12ÔÂ15ÈÕ
+ *  Created on: 2015å¹´12æœˆ15æ—¥
  *      Author: chenzhuo
  */
 
@@ -15,9 +15,9 @@
 using namespace std;
 
 /**
- * ÏûÏ¢¶ÓÁĞÖĞµÄ½á¹¹¶¨Òå
+ * æ¶ˆæ¯é˜Ÿåˆ—ä¸­çš„ç»“æ„å®šä¹‰
  */
-typedef struct tagMsgBuf { //ÔÊĞíµÄÄ¬ÈÏÖµÇëÌáÇ°ÓÃipcs -l ²é¿´ÉÏÏŞ
+typedef struct tagMsgBuf { //å…è®¸çš„é»˜è®¤å€¼è¯·æå‰ç”¨ipcs -l æŸ¥çœ‹ä¸Šé™
 	long lType;
 	char sBuf[MAX_MSG_SIZE];
 } MsgBuf_T;
