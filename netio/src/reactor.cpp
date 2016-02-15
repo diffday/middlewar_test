@@ -2,7 +2,7 @@
  * reactor.cpp
 
  *
- *  Created on: 2015Äê12ÔÂ23ÈÕ
+ *  Created on: 2015å¹´12æœˆ23æ—¥
  *      Author: chenzhuo
  */
 #include "reactor.h"
@@ -80,7 +80,7 @@ int CReactor::Init(int iPort) {
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	servaddr.sin_port = htons(iPort);
 	int opt = 1;
-	//SO_REUSEADDR ¾ö¶¨time_waitµÄsocketÄÜ·ñ±»Á¢¼´ÖØĞÂ°ó¶¨¡£Í¬Ê±ÔÊĞíÆäËüÈô¸É·Ç³£¹æÖØ¸´°ó¶¨ĞĞÎª£¬²»ÏêÏ¸Õ¹¿ªÁË
+	//SO_REUSEADDR å†³å®štime_waitçš„socketèƒ½å¦è¢«ç«‹å³é‡æ–°ç»‘å®šã€‚åŒæ—¶å…è®¸å…¶å®ƒè‹¥å¹²éå¸¸è§„é‡å¤ç»‘å®šè¡Œä¸ºï¼Œä¸è¯¦ç»†å±•å¼€äº†
 	iRet = setsockopt(m_iSvrFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	if (iRet < 0) {
 		close(m_iSvrFd);
@@ -93,14 +93,14 @@ int CReactor::Init(int iPort) {
 		return BIND_SOCKET_FAILED;
 	}
 
-	//SO_LINGER ¾ö¶¨ÏµÍ³ÈçºÎ´¦Àí²Ğ´æÔÚÌ×½Ó×Ö·¢ËÍ¶ÓÁĞÖĞµÄÊı¾İ¡£´¦Àí·½Ê½ÎŞ·ÇÁ½ÖÖ£¬¶ªÆúºÍ·¢ËÍµ½¶Ô¶ËºóÓÅÑÅ¹Ø±Õ
+	//SO_LINGER å†³å®šç³»ç»Ÿå¦‚ä½•å¤„ç†æ®‹å­˜åœ¨å¥—æ¥å­—å‘é€é˜Ÿåˆ—ä¸­çš„æ•°æ®ã€‚å¤„ç†æ–¹å¼æ— éä¸¤ç§ï¼Œä¸¢å¼ƒå’Œå‘é€åˆ°å¯¹ç«¯åä¼˜é›…å…³é—­
 	/*typedef struct linger {
-		u_short l_onoff; //ÊÇ·ñ¿ªÆô£¬Ä¬ÈÏÊÇ0±íÊ¾¹Ø±Õ
-		u_short l_linger; //ÓÅÑÅ¹Ø±Õ×î³¤Ê±ÏŞ
+		u_short l_onoff; //æ˜¯å¦å¼€å¯ï¼Œé»˜è®¤æ˜¯0è¡¨ç¤ºå…³é—­
+		u_short l_linger; //ä¼˜é›…å…³é—­æœ€é•¿æ—¶é™
 	  }
-	  µ±l_onoffÎª0Ê±£¬Õû¸ö½á¹¹ÎŞÒâÒå£¬±íÊ¾socket¼ÌĞøÑØÓÃÄ¬ÈÏĞĞÎª¡£closesocketÁ¢¼´·µ»Ø£¬·¢ËÍ¶ÓÁĞÏµÍ³µ×²ã±£³ÖÖÁ·¢ËÍµ½¶Ô¶ËÍê³É
-	  l_onoff·Ç0£¬l_linger=0 ±íÊ¾Á¢¼´¶ªÆúÊı¾İ£¬Ö±½Ó·¢ËÍrst°ü£¬×ÔÉí¸´Î»
-	  l_onoff·Ç0£¬l_linger·Ç0£¬µ±ÊÇ×èÈûÊ½socketÊ±£¬closesocket×èÈûµ½l_lingerÊ±¼ä³¬Ê±»òÊı¾İ·¢ËÍÍê³É¡£³¬Ê±ºó£¬·¢ËÍ¶ÓÁĞ»¹ÊÇ»á±»¶ªÆú
+	  å½“l_onoffä¸º0æ—¶ï¼Œæ•´ä¸ªç»“æ„æ— æ„ä¹‰ï¼Œè¡¨ç¤ºsocketç»§ç»­æ²¿ç”¨é»˜è®¤è¡Œä¸ºã€‚closesocketç«‹å³è¿”å›ï¼Œå‘é€é˜Ÿåˆ—ç³»ç»Ÿåº•å±‚ä¿æŒè‡³å‘é€åˆ°å¯¹ç«¯å®Œæˆ
+	  l_onoffé0ï¼Œl_linger=0 è¡¨ç¤ºç«‹å³ä¸¢å¼ƒæ•°æ®ï¼Œç›´æ¥å‘é€rståŒ…ï¼Œè‡ªèº«å¤ä½
+	  l_onoffé0ï¼Œl_lingeré0ï¼Œå½“æ˜¯é˜»å¡å¼socketæ—¶ï¼Œclosesocketé˜»å¡åˆ°l_lingeræ—¶é—´è¶…æ—¶æˆ–æ•°æ®å‘é€å®Œæˆã€‚è¶…æ—¶åï¼Œå‘é€é˜Ÿåˆ—è¿˜æ˜¯ä¼šè¢«ä¸¢å¼ƒ
 	*/
 	linger stLinger;
 	stLinger.l_onoff=1;
@@ -125,15 +125,15 @@ int CReactor::Init(int iPort) {
 		return FCNTL_SOCKET_FAILED;
 	}
 
-	iRet = fcntl(m_iSvrFd, F_SETFL, iCurrentFlag | O_NONBLOCK); //ÉèÖÃ·Ç×èÈû
+	iRet = fcntl(m_iSvrFd, F_SETFL, iCurrentFlag | O_NONBLOCK); //è®¾ç½®éé˜»å¡
 	if (iRet < 0) {
 		close(m_iSvrFd);
 		return FCNTL_SOCKET_FAILED;
 	}
 
-	m_iEpFd = ::epoll_create(MAX_EPOLL_EVENT_NUM); //¼ÓÉÏ¿Õ::±íÃ÷ÊÇÏµÍ³¿âº¯Êı»òÈ«¾Ö±äÁ¿/º¯Êı£¬ºÍ³ÉÔ±º¯ÊıÃ÷È·Çø·Ö¿ªÀ´
+	m_iEpFd = ::epoll_create(MAX_EPOLL_EVENT_NUM); //åŠ ä¸Šç©º::è¡¨æ˜æ˜¯ç³»ç»Ÿåº“å‡½æ•°æˆ–å…¨å±€å˜é‡/å‡½æ•°ï¼Œå’Œæˆå‘˜å‡½æ•°æ˜ç¡®åŒºåˆ†å¼€æ¥
 	if (-1 == m_iEpFd) {
-		if (ENOSYS == errno) { //ÏµÍ³²»Ö§³Ö
+		if (ENOSYS == errno) { //ç³»ç»Ÿä¸æ”¯æŒ
 
 		}
 		return EPOLL_CREATE_FAILED;
@@ -150,7 +150,7 @@ int CReactor::Init(int iPort) {
 int CReactor::AddToWatchList(int iFd, int type) {
 	/*
 	 *
-	 typedef union epoll_data { //Ò»°ãÌîÒ»¸öfd²ÎÊı¼´¿É
+	 typedef union epoll_data { //ä¸€èˆ¬å¡«ä¸€ä¸ªfdå‚æ•°å³å¯
 	 	 void        *ptr;
 	 	 int          fd;
 	 	 uint32_t     u32;
@@ -165,20 +165,20 @@ int CReactor::AddToWatchList(int iFd, int type) {
 
 	struct epoll_event event;
 	/*
-	 * EPOLLIN £º±íÊ¾¶ÔÓ¦µÄÎÄ¼şÃèÊö·û¿ÉÒÔ¶Á£¨°üÀ¨¶Ô¶ËSOCKETÕı³£¹Ø±Õ£©£»
-EPOLLOUT£º±íÊ¾¶ÔÓ¦µÄÎÄ¼şÃèÊö·û¿ÉÒÔĞ´£»
-EPOLLPRI£º±íÊ¾¶ÔÓ¦µÄÎÄ¼şÃèÊö·ûÓĞ½ô¼±µÄÊı¾İ¿É¶Á£¨ÕâÀïÓ¦¸Ã±íÊ¾ÓĞ´øÍâÊı¾İµ½À´£©£»
-EPOLLERR£º±íÊ¾¶ÔÓ¦µÄÎÄ¼şÃèÊö·û·¢Éú´íÎó£»
-EPOLLHUP£º±íÊ¾¶ÔÓ¦µÄÎÄ¼şÃèÊö·û±»¹Ò¶Ï£»
-EPOLLET£º ½«EPOLLÉèÎª±ßÔµ´¥·¢(Edge Triggered)Ä£Ê½£¬ÕâÊÇÏà¶ÔÓÚÄ¬ÈÏµÄË®Æ½´¥·¢(Level Triggered)À´ËµµÄ¡£ET¶ÔÒ»¸öÊÂ¼ş£¨Èç¿É¶Á£©£¬Ö»»áÍ¨ÖªÒ»´Î¡£µ«LTµ±ÊÂ¼ş³ÖĞø£¨Ò»Ö±¿É¶Á£©£¬»áÒ»Ö±Í¨Öª
-EPOLLONESHOT£ºÖ»¼àÌıÒ»´ÎÊÂ¼ş£¬µ±¼àÌıÍêÕâ´ÎÊÂ¼şÖ®ºó£¬Èç¹û»¹ĞèÒª¼ÌĞø¼àÌıÕâ¸ösocketµÄ»°£¬ĞèÒªÔÙ´Î°ÑÕâ¸ösocket¼ÓÈëµ½EPOLL¶ÓÁĞÀï
+	 * EPOLLIN ï¼šè¡¨ç¤ºå¯¹åº”çš„æ–‡ä»¶æè¿°ç¬¦å¯ä»¥è¯»ï¼ˆåŒ…æ‹¬å¯¹ç«¯SOCKETæ­£å¸¸å…³é—­ï¼‰ï¼›
+EPOLLOUTï¼šè¡¨ç¤ºå¯¹åº”çš„æ–‡ä»¶æè¿°ç¬¦å¯ä»¥å†™ï¼›
+EPOLLPRIï¼šè¡¨ç¤ºå¯¹åº”çš„æ–‡ä»¶æè¿°ç¬¦æœ‰ç´§æ€¥çš„æ•°æ®å¯è¯»ï¼ˆè¿™é‡Œåº”è¯¥è¡¨ç¤ºæœ‰å¸¦å¤–æ•°æ®åˆ°æ¥ï¼‰ï¼›
+EPOLLERRï¼šè¡¨ç¤ºå¯¹åº”çš„æ–‡ä»¶æè¿°ç¬¦å‘ç”Ÿé”™è¯¯ï¼›
+EPOLLHUPï¼šè¡¨ç¤ºå¯¹åº”çš„æ–‡ä»¶æè¿°ç¬¦è¢«æŒ‚æ–­ï¼›
+EPOLLETï¼š å°†EPOLLè®¾ä¸ºè¾¹ç¼˜è§¦å‘(Edge Triggered)æ¨¡å¼ï¼Œè¿™æ˜¯ç›¸å¯¹äºé»˜è®¤çš„æ°´å¹³è§¦å‘(Level Triggered)æ¥è¯´çš„ã€‚ETå¯¹ä¸€ä¸ªäº‹ä»¶ï¼ˆå¦‚å¯è¯»ï¼‰ï¼Œåªä¼šé€šçŸ¥ä¸€æ¬¡ã€‚ä½†LTå½“äº‹ä»¶æŒç»­ï¼ˆä¸€ç›´å¯è¯»ï¼‰ï¼Œä¼šä¸€ç›´é€šçŸ¥
+EPOLLONESHOTï¼šåªç›‘å¬ä¸€æ¬¡äº‹ä»¶ï¼Œå½“ç›‘å¬å®Œè¿™æ¬¡äº‹ä»¶ä¹‹åï¼Œå¦‚æœè¿˜éœ€è¦ç»§ç»­ç›‘å¬è¿™ä¸ªsocketçš„è¯ï¼Œéœ€è¦å†æ¬¡æŠŠè¿™ä¸ªsocketåŠ å…¥åˆ°EPOLLé˜Ÿåˆ—é‡Œ
 	 */
 	event.events = EPOLLIN | EPOLLET;
 	event.data.fd = iFd;
 	/*
-	 * EPOLL_CTL_ADD£º×¢²áĞÂµÄfdµ½epfdÖĞ£»
-		EPOLL_CTL_MOD£ºĞŞ¸ÄÒÑ¾­×¢²áµÄfdµÄ¼àÌıÊÂ¼ş£»
-		EPOLL_CTL_DEL£º´ÓepfdÖĞÉ¾³ıÒ»¸öfd£»
+	 * EPOLL_CTL_ADDï¼šæ³¨å†Œæ–°çš„fdåˆ°epfdä¸­ï¼›
+		EPOLL_CTL_MODï¼šä¿®æ”¹å·²ç»æ³¨å†Œçš„fdçš„ç›‘å¬äº‹ä»¶ï¼›
+		EPOLL_CTL_DELï¼šä»epfdä¸­åˆ é™¤ä¸€ä¸ªfdï¼›
 	 */
 	int iRet = epoll_ctl(m_iEpFd, EPOLL_CTL_ADD, iFd, &event);
 	if (iRet <  0) {
@@ -210,7 +210,7 @@ int  CReactor::RemoveFromWatchList(int iFd, int type) {
 
 int CReactor::CheckEvents() {
 	if (m_nEvents > 0) {
-		int iRet = epoll_wait(m_iEpFd, m_aEpollEvents, m_nEvents, DEFAULT_EPOLL_WAIT_TIME); //³¬Ê±Ê±¼äµ¥Î»ÊÇºÁÃë
+		int iRet = epoll_wait(m_iEpFd, m_aEpollEvents, m_nEvents, DEFAULT_EPOLL_WAIT_TIME); //è¶…æ—¶æ—¶é—´å•ä½æ˜¯æ¯«ç§’
 		if (iRet < 0) {
 			return EPOLL_WAIT_FAILED;
 		}

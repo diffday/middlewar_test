@@ -26,13 +26,13 @@ int main(int argc, char** argv)
 	/*
 	if ( fork() == 0 ) {
 		//sleep();
-		//×Ó½ø³Ì³ÌĞò
+		//å­è¿›ç¨‹ç¨‹åº
 		//CMsgQueue* pMsgq = NULL;
 		//oCMQManager.GetMsgQueue(0xcccde,pMsgq);
 		oCMQManager.delMsgQueue(0xcccde);
 	}
 	else {
-		//¸¸½ø³Ì³ÌĞò
+		//çˆ¶è¿›ç¨‹ç¨‹åº
 		oCMQManager.delMsgQueue(0xcccde);
 	}*/
 

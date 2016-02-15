@@ -1,7 +1,7 @@
 /*
  * main_control.cpp
  *
- *  Created on: 2015Äê12ÔÂ22ÈÕ
+ *  Created on: 2015å¹´12æœˆ22æ—¥
  *      Author: chenzhuo
  */
 
@@ -13,7 +13,7 @@
 
 void init_daemon() {
 	pid_t pid = fork();
-	if ( 0 != pid ) { //¸¸½ø³ÌÍË³ö
+	if ( 0 != pid ) { //çˆ¶è¿›ç¨‹é€€å‡º
 		exit(0);
 	}
 	setpgid(0, 0);
@@ -39,7 +39,7 @@ void CatchSignal(int iSignal) {
 		printf("do exit...........\n");
 		break;
 	case SIGUSR2:// Kill -12
-		//do upgrade,ÀıÈç´ËÊ±²»Çå¿Õ¹ÜµÀ
+		//do upgrade,ä¾‹å¦‚æ­¤æ—¶ä¸æ¸…ç©ºç®¡é“
 		printf("do upgrade...........\n");
 		break;
 	}

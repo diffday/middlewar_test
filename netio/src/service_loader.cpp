@@ -21,7 +21,7 @@ int CServiceLoader::LoadServices(){
 }
 
 int CServiceLoader::LoadSercie_i(int iCmdId,const char* pszDLLName) {
-	void* pHandle = dlopen(pszDLLName, RTLD_NOW | RTLD_GLOBAL);//RTLD_NOW 当你容器加载的so在最后的话，可以用now，这样还可更快检查出编译的库是否有缺失，不推迟到运行时，若后面还要动态加载其它库，则用RTLD_LAZY更好
+	void* pHandle = dlopen(pszDLLName, RTLD_NOW | RTLD_GLOBAL);//RTLD_NOW 褰撲綘瀹瑰櫒鍔犺浇鐨剆o鍦ㄦ渶鍚庣殑璇濓紝鍙互鐢╪ow锛岃繖鏍疯繕鍙洿蹇鏌ュ嚭缂栬瘧鐨勫簱鏄惁鏈夌己澶憋紝涓嶆帹杩熷埌杩愯鏃讹紝鑻ュ悗闈㈣繕瑕佸姩鎬佸姞杞藉叾瀹冨簱锛屽垯鐢≧TLD_LAZY鏇村ソ
 	if (NULL == pHandle) {
 		printf("load dll %s failed,msg: %s\n",pszDLLName,dlerror());
 		return OPEN_DLL_FAILED;

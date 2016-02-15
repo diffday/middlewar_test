@@ -1,7 +1,7 @@
 /*
  * msgq_manager.cpp
  *
- *  Created on: 2015��12��15��
+ *  Created on: 2015年12月15日
  *      Author: chenzhuo
  */
 #include "msgq_manager.h"
@@ -59,10 +59,10 @@ int CMsgQueue::Init(key_t iKey) {
 }
 
 /**
- * ��Ϊ�޷���֪һ����Ϣ�����е��׻��ж��ٽ��̹��������棬��ɾ��������ֻ�ʺ�ȷ�����˽����ʱ��ʱ���á���Ϊ�м�������ʺϽ���Ϣ����ɾ����������shell�ű������Ա������
+ * 因为无法获知一个消息队列中到底还有多少进程挂载在上面，其删除操作，只适合确定性了解回收时机时启用。作为中间件，更适合将消息队列删除操作留给shell脚本或管理员命令行
  */
 int CMsgQueue::Fini() {
-	int iRet=msgctl(m_iMsgQId,IPC_RMID,NULL);//ɾ����Ϣ����
+	int iRet=msgctl(m_iMsgQId,IPC_RMID,NULL);//删除消息队列
 	if(iRet < 0)
 	{
 	    printf("unlink msg queue error\n");
