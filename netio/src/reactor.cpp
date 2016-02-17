@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <string.h>
 #include "global_define.h"
+#include "assert.h"
 CNetHandler::~CNetHandler() { }
 CTcpNetHandler::CTcpNetHandler() : m_pReactor(NULL) {}
 CTcpNetHandler::~CTcpNetHandler() {}
@@ -134,7 +135,7 @@ int CReactor::Init(int iPort) {
 	m_iEpFd = ::epoll_create(MAX_EPOLL_EVENT_NUM); //加上空::表明是系统库函数或全局变量/函数，和成员函数明确区分开来
 	if (-1 == m_iEpFd) {
 		if (ENOSYS == errno) { //系统不支持
-
+			assert(0);
 		}
 		return EPOLL_CREATE_FAILED;
 	}
@@ -208,8 +209,14 @@ int  CReactor::RemoveFromWatchList(int iFd, int type) {
 	return 0;
 }
 
+/**
+ * 当没有任何事件要监听的时候，不用sleep是因为sleep会让整个进程切换状态，等待操作系统的唤醒调用，最差的情况可能要10s钟的时间
+ * 并不能精确的做到短时间段的sleep任务
+ *
+ * 不加等待机制（阻塞）的逻辑也是不对的，这样进程会占住cpu过多的时间才放开。不利于多进程间cpu时间的有效利用
+ */
 int CReactor::CheckEvents() {
-	if (m_nEvents > 0) {
+	if (m_nEvents > 0) {//进程间通信也放入监听。当container有数据返回到来时，可发数据包及时唤醒
 		int iRet = epoll_wait(m_iEpFd, m_aEpollEvents, m_nEvents, DEFAULT_EPOLL_WAIT_TIME); //超时时间单位是毫秒
 		if (iRet < 0) {
 			return EPOLL_WAIT_FAILED;
@@ -220,7 +227,7 @@ int CReactor::CheckEvents() {
 		tv.tv_sec = 0;
 		tv.tv_usec = DEFAULT_EPOLL_WAIT_TIME;
 		//int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* errorfds, struct timeval* timeout);
-		select(0,NULL,NULL,NULL,&tv);
+		select(0,NULL,NULL,NULL,&tv); //纯纯的sleep
 	}
 
 
