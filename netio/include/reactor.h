@@ -24,7 +24,7 @@ class CTcpNetHandler : public CNetHandler {
 public:
 	CTcpNetHandler();
 	~CTcpNetHandler();
-	CTcpNetHandler(CReactor* pReactor);
+	//CTcpNetHandler(CReactor* pReactor);
 public:
 	int HandleEvent(int iConn, int iType);
 private:
@@ -34,7 +34,24 @@ private:
 	int DoClose(int iConn);
 
 private:
-	CReactor* m_pReactor;
+	//CReactor* m_pReactor;
+};
+
+class CUSockUdpHandler : public CNetHandler {
+public:
+	CUSockUdpHandler();
+	~CUSockUdpHandler();
+	//CUSockUdpHandler(CReactor* pReactor);
+public:
+	int HandleEvent(int iConn, int iType);
+private:
+	int DoConn(int iConn);
+	int DoRecv(int iConn);
+	int DoSend(int iConn);
+	int DoClose(int iConn);
+
+private:
+	//CReactor* m_pReactor;
 };
 
 class CReactor {
@@ -43,8 +60,10 @@ public:
 	CReactor();
 	~CReactor();
 public:
-	int Init(int iPort); //此处我们默认初始化tcp svr服务
+	int Init(int iTcpSvrPort, const char* pszUSockPath); //当iTcpSvrPort=0时，不启用tcp svr监听服务。当pszUSockPath=NULL(0)时，不启用usock的udp svr服务
 	int RegisterTcpNetHandler(CTcpNetHandler* pTcpNetHandler);
+	//USock默认用UDP SVR服务
+	int RegisterUSockUdpHandler(CUSockUdpHandler* pUSockUdpHandler);
 
 	void RunEventLoop();
 protected:
@@ -53,11 +72,15 @@ protected:
 private:
 	int AddToWatchList(int iFd, int type);
 	int RemoveFromWatchList(int iFd, int type);
+	int InitTcpSvr(int iTcpSvrPort);
+	int InitUSockUdpSvr(const char* pszUSockPath);
 
 private:
 	vector<int> m_vecFds;
-	int m_iSvrFd;
+	int m_iSvrFd; //接收外部请求的socket
+	int m_iUSockFd; //接收容器回包唤醒的Usock
 	CTcpNetHandler* m_pTcpNetHandler;
+	CUSockUdpHandler* m_pUSockUdpHandler;
 	char* m_pszBuf;
 	int m_iBufLen;
 	bool m_bInit;

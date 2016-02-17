@@ -38,6 +38,10 @@ enum errcode {
 	EPOLL_CREATE_FAILED,
 	EPOLL_CNTL_FAILED,
 	EPOLL_WAIT_FAILED,
+	CREATE_USOCK_FAILED,
+	SET_USOCKOPT_FAILED,
+	BIND_USOCKET_FAILED,
+	FCNTL_USOCKET_FAILED,
 };
 
 static const std::map<int, const char*>::value_type init_cmd_dll_value[] =
@@ -47,5 +51,7 @@ std::map<int, const char*>::value_type( 0xcccce, "/home/chenzhuo/test/middlewar_
 };
 
 static const std::map<int, const char*> g_mapCmdDLL(init_cmd_dll_value, init_cmd_dll_value+sizeof(init_cmd_dll_value)/sizeof(init_cmd_dll_value[0]));
+
+static const char* NET_IO_USOCK_PATH = "/tmp/app/0001/0001_0";
 
 #endif /* NETIO_INCLUDE_GLOBAL_DEFINE_H_ */
