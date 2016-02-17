@@ -377,16 +377,23 @@ int CReactor::CheckEvents() {
 			return EPOLL_WAIT_FAILED;
 		}
 	}
+	else {
+		printf("nothing to do\n");
+	}
 
 	return 0;
 }
 
 int CReactor::ProcessSocketEvent() { //TODO 调用Handler来做实现
-	return 0;
+	//exit(0);
+	printf("ProcessSocketEvent\n");
+	return -1;
 }
 
 void CReactor::RunEventLoop() {
 	int iRet = 0;
+	AddToWatchList(m_iSvrFd, 0); //将两大主体加入监听
+	AddToWatchList(m_iUSockFd, 0);
 	while (1) {
 		iRet = this->CheckEvents();
 		if (0 == iRet) { //没有任何东西要处理时，小小暂停一下
@@ -401,8 +408,13 @@ void CReactor::RunEventLoop() {
 			tv.tv_usec = DEFAULT_EPOLL_WAIT_TIME;
 			//int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* errorfds, struct timeval* timeout);
 			select(0,NULL,NULL,NULL,&tv); //纯纯的sleep
+			printf("just sleep a little\n");
 		}
-		this->ProcessSocketEvent();
+
+		iRet = this->ProcessSocketEvent();
+		if (iRet) {
+			break;
+		}
 	}
 }
 

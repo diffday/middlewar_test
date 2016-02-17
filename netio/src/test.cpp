@@ -22,6 +22,7 @@ int main(int argc, char** argv)
 	CReactor oReactor;
 	int iRet = oReactor.Init(7890, NET_IO_USOCK_PATH);
 	cout<<iRet<<endl;
+	oReactor.RunEventLoop();
 
 	/*
 	if ( fork() == 0 ) {
