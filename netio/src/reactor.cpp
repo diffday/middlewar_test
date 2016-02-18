@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/un.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -20,12 +21,8 @@
 CNetHandler::~CNetHandler() { }
 
 //=====CTcpNetHandler start
-CTcpNetHandler::CTcpNetHandler() {}
+CTcpNetHandler::CTcpNetHandler() : m_pReactor(NULL) {}
 CTcpNetHandler::~CTcpNetHandler() {}
-/*
-CTcpNetHandler::CTcpNetHandler(CReactor* pReactor) {
-	m_pReactor = pReactor;
-};*/
 
 int CTcpNetHandler::HandleEvent(int iConn, int iType) {
 	switch (iType) {
@@ -47,10 +44,55 @@ int CTcpNetHandler::HandleEvent(int iConn, int iType) {
 
 
 int CTcpNetHandler::DoConn(int iConn) {
+	struct sockaddr_in stCliAddr;
+	socklen_t socklen = sizeof(stCliAddr);
+	int iConnfd = accept(iConn, (struct sockaddr *)&stCliAddr,&socklen);
+	if (iConnfd < 0)
+	{
+	    perror("accept error");
+	    return -1;
+	}
+	printf("accept form %s:%d\n", inet_ntoa(stCliAddr.sin_addr), stCliAddr.sin_port);
+
+	int iCurrentFlag = 0;
+	iCurrentFlag = fcntl(iConnfd, F_GETFL, 0);
+	if (iCurrentFlag == -1) {
+		close(iConnfd);
+		return FCNTL_SOCKET_FAILED;
+	}
+
+	int iRet = fcntl(iConnfd, F_SETFL, iCurrentFlag | O_NONBLOCK); //设置非阻塞
+	if (iRet < 0) {
+		close(iConnfd);
+		return FCNTL_SOCKET_FAILED;
+	}
+
+	printf("==do on conn operation==, the conn fd is :%d\n",iConnfd);
+	m_pReactor->AddToWatchList(iConnfd, TCP_SERVER_READ);
+
 	return 0;
 }
 
 int CTcpNetHandler::DoRecv(int iConn) {
+	int nread;
+	char buf[1000] = {0};
+	nread = read(iConn, buf, 1000);//读取客户端socket流
+
+	if (nread == 0) {
+	   printf("client close the connection\n");
+	   close(iConn);
+	   return -1;
+	}
+	if (nread < 0) {
+	   perror("read error");
+	   close(iConn);
+	   return -1;
+	}
+
+	printf("the recv info is : %s\n",buf);
+
+	write(iConn, buf, nread);//响应客户端
+	m_pReactor->RemoveFromWatchList(iConn);
 	return 0;
 }
 
@@ -109,8 +151,10 @@ int CUSockUdpHandler::DoClose(int iConn) {
 
 //=====CUSockUdpHandler end
 
-CReactor::CReactor() : m_pTcpNetHandler(NULL),m_pUSockUdpHandler(NULL),m_iSvrFd(0),m_iUSockFd(0) {
+CReactor::CReactor() : m_pTcpNetHandler(NULL),m_pUSockUdpHandler(NULL),m_iSvrFd(0),m_iUSockFd(0),m_iEpollSucc(0) {
 	m_pszBuf=new char[10240];
+	m_iEvents = 0;
+
 }
 CReactor::~CReactor() {
 	delete m_pszBuf;
@@ -275,7 +319,6 @@ int CReactor::InitUSockUdpSvr(const char* pszUSockPath) {
 int CReactor::Init(int iTcpSvrPort, const char* pszUSockPath) {
 	int iRet = 0;
 
-
 	if (iTcpSvrPort) {
 		iRet = InitTcpSvr(iTcpSvrPort);
 		if (iRet) {
@@ -299,17 +342,15 @@ int CReactor::Init(int iTcpSvrPort, const char* pszUSockPath) {
 		return EPOLL_CREATE_FAILED;
 	}
 
-	m_aEpollEvents = new epoll_event[MAX_EPOLL_EVENT_NUM];
-	memset(m_aEpollEvents, 0, MAX_EPOLL_EVENT_NUM * sizeof(epoll_event));
+	m_arrEpollEvents = new epoll_event[MAX_EPOLL_EVENT_NUM];
+	memset(m_arrEpollEvents, 0, MAX_EPOLL_EVENT_NUM * sizeof(epoll_event));
 
 	m_bInit = 1;
-	//std::cout<<NET_IO_USOCK_PATH<<std::endl;
-	//printf("%s\n",NET_IO_USOCK_PATH);
 
 	return 0;
 }
 
-int CReactor::AddToWatchList(int iFd, int type) {
+int CReactor::AddToWatchList(int iFd, EventFlag_t type, void* pData) {
 	/*
 	 *
 	 typedef union epoll_data { //一般填一个fd参数即可
@@ -336,24 +377,28 @@ EPOLLET： 将EPOLL设为边缘触发(Edge Triggered)模式，这是相对于默
 EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果还需要继续监听这个socket的话，需要再次把这个socket加入到EPOLL队列里
 	 */
 	event.events = EPOLLIN | EPOLLET;
+	stSocketEvent stSockEvent;
 	event.data.fd = iFd;
 	/*
-	 * EPOLL_CTL_ADD：注册新的fd到epfd中；
-		EPOLL_CTL_MOD：修改已经注册的fd的监听事件；
-		EPOLL_CTL_DEL：从epfd中删除一个fd；
+	EPOLL_CTL_ADD：注册新的fd到epfd中；
+	EPOLL_CTL_MOD：修改已经注册的fd的监听事件；
+	EPOLL_CTL_DEL：从epfd中删除一个fd；
 	 */
+	//printf("epoll fd:%d\n",m_iEpFd);
 	int iRet = epoll_ctl(m_iEpFd, EPOLL_CTL_ADD, iFd, &event);
 	if (iRet <  0) {
+		printf("%d,error:%d,info:%s\n",iRet,errno,strerror(errno));
 		return EPOLL_CNTL_FAILED;
 	}
-	++m_nEvents;
+	++m_iEvents;
+	printf("add fd,iEventCount:%d,op:%d\n",m_iEvents, type);
 
 	m_vecFds.push_back(iFd);
 
 	return 0;
 }
 
-int  CReactor::RemoveFromWatchList(int iFd, int type) {
+int  CReactor::RemoveFromWatchList(int iFd) {
 	int iRet = epoll_ctl(m_iEpFd, EPOLL_CTL_DEL, iFd, NULL);
 	if (iRet <  0) {
 		return EPOLL_CNTL_FAILED;
@@ -362,7 +407,7 @@ int  CReactor::RemoveFromWatchList(int iFd, int type) {
 	for (;it!=m_vecFds.end();++it) {
 		if (iFd == (*it)) {
 			m_vecFds.erase(it);
-			--m_nEvents;
+			--m_iEvents;
 			break;
 		}
 	}
@@ -371,29 +416,65 @@ int  CReactor::RemoveFromWatchList(int iFd, int type) {
 }
 
 int CReactor::CheckEvents() {
-	if (m_nEvents > 0) {//进程间通信也放入监听。当container有数据返回到来时，可发数据包及时唤醒
-		int iRet = epoll_wait(m_iEpFd, m_aEpollEvents, m_nEvents, DEFAULT_EPOLL_WAIT_TIME); //超时时间单位是毫秒
-		if (iRet < 0) {
+	if (m_iEvents > 0) {//进程间通信也放入监听。当container有数据返回到来时，可发数据包及时唤醒
+		m_iEpollSucc = epoll_wait(m_iEpFd, m_arrEpollEvents, m_iEvents, DEFAULT_EPOLL_WAIT_TIME); //超时时间单位是毫秒
+		//printf("event count %d\n",m_iEpollSucc);
+		if (m_iEpollSucc < 0) { //出错的时候返回-1，可通过errno查看具体错误.否则返回可处理的IO个数
 			return EPOLL_WAIT_FAILED;
+		}
+		else if (m_iEpollSucc > 0){
+			printf("event count %d\n",m_iEpollSucc);
 		}
 	}
 	else {
-		printf("nothing to do\n");
+		printf("nothing to wait,m_nEvent:%d\n",m_iEvents);
 	}
 
 	return 0;
 }
 
 int CReactor::ProcessSocketEvent() { //TODO 调用Handler来做实现
-	//exit(0);
-	printf("ProcessSocketEvent\n");
-	return -1;
+	/*
+	 *
+	typedef union epoll_data {
+		void        *ptr;
+		int          fd;
+		uint32_t     u32;
+		uint64_t     u64;
+	} epoll_data_t;
+
+	struct epoll_event {
+		uint32_t     events;      // Epoll events--EPOLLIN(for read) EPOLLOUT(for write) 等等一堆事件的掩码值
+		epoll_data_t data;        //User data variable
+	};
+	 */
+
+	for(int i = 0; i < m_iEpollSucc; ++i)
+	{
+		 if (m_arrEpollEvents[i].data.fd == m_iSvrFd) {
+			 int iRet = m_pTcpNetHandler->HandleEvent(m_iSvrFd,1);
+			 if (0 != iRet ) {
+				 return iRet;
+			 }
+		 }
+		 else {
+			 int iRet = m_pTcpNetHandler->HandleEvent(m_arrEpollEvents[i].data.fd,2);
+			 if (0 != iRet ) {
+			 	return iRet;
+			 }
+		 }
+
+	}
+
+	m_iEpollSucc = 0;
+	return 0;
 }
 
 void CReactor::RunEventLoop() {
 	int iRet = 0;
-	AddToWatchList(m_iSvrFd, 0); //将两大主体加入监听
-	AddToWatchList(m_iUSockFd, 0);
+	int count = 0;
+	AddToWatchList(m_iSvrFd, TCP_SERVER_ACCEPT); //将两大IO通道加入监听
+	AddToWatchList(m_iUSockFd, TCP_SERVER_ACCEPT);
 	while (1) {
 		iRet = this->CheckEvents();
 		if (0 == iRet) { //没有任何东西要处理时，小小暂停一下
@@ -408,11 +489,12 @@ void CReactor::RunEventLoop() {
 			tv.tv_usec = DEFAULT_EPOLL_WAIT_TIME;
 			//int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* errorfds, struct timeval* timeout);
 			select(0,NULL,NULL,NULL,&tv); //纯纯的sleep
-			printf("just sleep a little\n");
+			//printf("just sleep a little\n");
 		}
 
 		iRet = this->ProcessSocketEvent();
-		if (iRet) {
+		if (iRet || count>=2000) {
+			count++;
 			break;
 		}
 	}
@@ -420,13 +502,13 @@ void CReactor::RunEventLoop() {
 
 int CReactor::RegisterTcpNetHandler(CTcpNetHandler* pTcpNetHandler) {
 	m_pTcpNetHandler = pTcpNetHandler;
-	//m_pTcpNetHandler->m_pReactor = this;
+	m_pTcpNetHandler->m_pReactor = this;
 	return 0;
 }
 
 int CReactor::RegisterUSockUdpHandler(CUSockUdpHandler* pUSockUdpHandler) {
 	m_pUSockUdpHandler = pUSockUdpHandler;
-	//m_pUSockUdpHandler->m_pReactor = this;
+	m_pUSockUdpHandler->m_pReactor = this;
 	return 0;
 }
 

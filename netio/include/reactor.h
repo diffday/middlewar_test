@@ -13,6 +13,19 @@ using namespace std;
 
 class CReactor;
 
+typedef enum {
+	TCP_CLIENT = 1,
+	TCP_SERVER_READ,
+	TCP_SERVER_ACCEPT,
+	UDP
+} EventFlag_t;
+
+struct stSocketEvent {
+	int fd;
+	EventFlag_t enEventFlag;
+	void* pData;
+};
+
 class CNetHandler {
 public:
 	virtual ~CNetHandler() = 0;
@@ -24,7 +37,6 @@ class CTcpNetHandler : public CNetHandler {
 public:
 	CTcpNetHandler();
 	~CTcpNetHandler();
-	//CTcpNetHandler(CReactor* pReactor);
 public:
 	int HandleEvent(int iConn, int iType);
 private:
@@ -33,15 +45,14 @@ private:
 	int DoSend(int iConn);
 	int DoClose(int iConn);
 
-private:
-	//CReactor* m_pReactor;
+public:
+	CReactor* m_pReactor;
 };
 
 class CUSockUdpHandler : public CNetHandler {
 public:
 	CUSockUdpHandler();
 	~CUSockUdpHandler();
-	//CUSockUdpHandler(CReactor* pReactor);
 public:
 	int HandleEvent(int iConn, int iType);
 private:
@@ -50,12 +61,13 @@ private:
 	int DoSend(int iConn);
 	int DoClose(int iConn);
 
-private:
-	//CReactor* m_pReactor;
+public:
+	CReactor* m_pReactor;
 };
 
 class CReactor {
-	friend class CNetHandler;
+	friend class CTcpNetHandler;
+	friend class CUSockUdpHandler;
 public:
 	CReactor();
 	~CReactor();
@@ -70,8 +82,8 @@ protected:
 	int CheckEvents();
 	int ProcessSocketEvent();
 private:
-	int AddToWatchList(int iFd, int type);
-	int RemoveFromWatchList(int iFd, int type);
+	int AddToWatchList(int iFd, EventFlag_t type, void* pData = NULL);
+	int RemoveFromWatchList(int iFd);
 	int InitTcpSvr(int iTcpSvrPort);
 	int InitUSockUdpSvr(const char* pszUSockPath);
 
@@ -87,8 +99,9 @@ private:
 	static const int MAX_EPOLL_EVENT_NUM = 4096;
 	static const int DEFAULT_EPOLL_WAIT_TIME = 10;//毫秒
 	int m_iEpFd;
-	epoll_event* m_aEpollEvents;
-	int m_nEvents;
+	epoll_event* m_arrEpollEvents;
+	int m_iEvents;
+	int m_iEpollSucc;
 };
 
 
