@@ -22,7 +22,9 @@ int main(int argc, char** argv)
 	CReactor oReactor;
 	int iRet = oReactor.Init(7890, NET_IO_USOCK_PATH);
 	CTcpNetHandler* oTcpNetHandler = new CTcpNetHandler;
+	oTcpNetHandler->RegisterMqManager(&oCMQManager);
 	CUSockUdpHandler* oUsockUdpHandler = new CUSockUdpHandler;
+	oUsockUdpHandler->RegisterMqManager(&oCMQManager);
 	oReactor.RegisterTcpNetHandler(oTcpNetHandler);
 	oReactor.RegisterUSockUdpHandler(oUsockUdpHandler);
 	cout<<iRet<<endl;

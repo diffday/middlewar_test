@@ -104,6 +104,10 @@ int CTcpNetHandler::DoClose(int iConn) {
 	return 0;
 }
 
+int CTcpNetHandler::RegisterMqManager(CMsgQManager* pMQManager) {
+	m_pMQManager = pMQManager;
+}
+
 //=====CTcpNetHandler end
 
 //=====CUSockUdpHandler start
@@ -126,6 +130,9 @@ int CUSockUdpHandler::HandleEvent(int iConn, int iType) {
 	return 0;
 }
 
+int CUSockUdpHandler::RegisterMqManager(CMsgQManager* pMQManager) {
+	m_pMQManager = pMQManager;
+}
 
 int CUSockUdpHandler::DoConn(int iConn) {
 	return 0;

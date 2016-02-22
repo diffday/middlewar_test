@@ -10,6 +10,7 @@
 #include <vector>
 #include <sys/epoll.h>
 #include <stdio.h>
+#include "msgq_manager.h"
 using namespace std;
 
 class CReactor;
@@ -73,20 +74,23 @@ public:
 	~CTcpNetHandler();
 public:
 	int HandleEvent(int iConn, int iType);
+	int RegisterMqManager(CMsgQManager* m_pMQManager);
 private:
 	int DoConn(int iConn);
-	int DoRecv(int iConn);
+	int DoRecv(int iConn);//mqmanager应该是reactor回调的成员，因为框架不关心事件处理细节
 	int DoSend(int iConn);
 	int DoClose(int iConn);
 
 public:
 	CReactor* m_pReactor;
+	CMsgQManager* m_pMQManager;
 };
 
 class CUSockUdpHandler : public CNetHandler {
 public:
 	CUSockUdpHandler();
 	~CUSockUdpHandler();
+	int RegisterMqManager(CMsgQManager* m_pMQManager);
 public:
 	int HandleEvent(int iConn, int iType);
 private:
@@ -97,6 +101,7 @@ private:
 
 public:
 	CReactor* m_pReactor;
+	CMsgQManager* m_pMQManager;
 };
 
 class CReactor {
