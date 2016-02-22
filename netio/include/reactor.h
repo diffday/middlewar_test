@@ -9,21 +9,55 @@
 #define NETIO_INCLUDE_REACTOR_H_
 #include <vector>
 #include <sys/epoll.h>
+#include <stdio.h>
 using namespace std;
 
 class CReactor;
 
 typedef enum {
+	NONE_FLAG = 0,
 	TCP_CLIENT = 1,
 	TCP_SERVER_READ,
 	TCP_SERVER_ACCEPT,
-	UDP
+	TCP_SERVER_SEND,
+	TCP_SERVER_CLOSE,
+	UDP_READ,
+	UDP_SEND,
 } EventFlag_t;
 
-struct stSocketEvent {
+//Epoll结构中传入的数据信息
+struct stEpollItem {
 	int fd;
 	EventFlag_t enEventFlag;
 	void* pData;
+
+	/*
+	stEpollItem(const stEpollItem& stOther) {
+		printf("call stEpollItem copy construct\n");
+		fd = stOther.fd;
+		enEventFlag = stOther.enEventFlag;
+		pData = stOther.pData;
+	}
+
+	stEpollItem& operator = (stEpollItem& stOther) {
+		printf("call operator =\n");
+		fd = stOther.fd;
+		enEventFlag = stOther.enEventFlag;
+		pData = stOther.pData;
+		return *this;
+	}*/
+
+	stEpollItem() {
+		fd=0;
+		enEventFlag = NONE_FLAG;
+		pData = NULL;
+	}
+
+	void Reset() {
+		fd=0;
+		enEventFlag = NONE_FLAG;
+		pData = NULL;
+	}
 };
 
 class CNetHandler {
@@ -88,20 +122,24 @@ private:
 	int InitUSockUdpSvr(const char* pszUSockPath);
 
 private:
-	vector<int> m_vecFds;
+	vector<int> m_vecFds;//clear和erase不释放空间，只是析构
+
 	int m_iSvrFd; //接收外部请求的socket
 	int m_iUSockFd; //接收容器回包唤醒的Usock
 	CTcpNetHandler* m_pTcpNetHandler;
 	CUSockUdpHandler* m_pUSockUdpHandler;
 	char* m_pszBuf;
 	int m_iBufLen;
+
 	bool m_bInit;
 	static const int MAX_EPOLL_EVENT_NUM = 4096;
 	static const int DEFAULT_EPOLL_WAIT_TIME = 10;//毫秒
 	int m_iEpFd;
-	epoll_event* m_arrEpollEvents;
+	epoll_event* m_arrEpollEvents; //用于方法间参数传递
 	int m_iEvents;
-	int m_iEpollSucc;
+	int m_iEpollSucc;//每次Epoll_event的handle处理结果，用于在方法间传递信息
+
+	stEpollItem m_arrEpollItem[MAX_EPOLL_EVENT_NUM]; //用于epoll信息的保存
 };
 
 

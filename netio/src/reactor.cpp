@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
-#include <stdio.h>
+
 #include <sys/stat.h>
 #include "global_define.h"
 #include "assert.h"
@@ -26,16 +26,16 @@ CTcpNetHandler::~CTcpNetHandler() {}
 
 int CTcpNetHandler::HandleEvent(int iConn, int iType) {
 	switch (iType) {
-	case 1:
+	case TCP_SERVER_ACCEPT:
 		DoConn(iConn);
 		break;
-	case 2:
+	case TCP_SERVER_READ:
 		DoRecv(iConn);
 		break;
-	case 3:
+	case TCP_SERVER_SEND:
 		DoSend(iConn);
 		break;
-	case 4:
+	case TCP_SERVER_CLOSE:
 		DoClose(iConn);
 		break;
 	}
@@ -116,17 +116,11 @@ CUSockUdpHandler::CUSockUdpHandler(CReactor* pReactor) {
 
 int CUSockUdpHandler::HandleEvent(int iConn, int iType) {
 	switch (iType) {
-	case 1:
-		DoConn(iConn);
-		break;
-	case 2:
+	case UDP_READ:
 		DoRecv(iConn);
 		break;
-	case 3:
+	case UDP_SEND:
 		DoSend(iConn);
-		break;
-	case 4:
-		DoClose(iConn);
 		break;
 	}
 	return 0;
@@ -350,7 +344,7 @@ int CReactor::Init(int iTcpSvrPort, const char* pszUSockPath) {
 	return 0;
 }
 
-int CReactor::AddToWatchList(int iFd, EventFlag_t type, void* pData) {
+int CReactor::AddToWatchList(int iFd, EventFlag_t emTodoOp, void* pData) {
 	/*
 	 *
 	 typedef union epoll_data { //一般填一个fd参数即可
@@ -377,8 +371,15 @@ EPOLLET： 将EPOLL设为边缘触发(Edge Triggered)模式，这是相对于默
 EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果还需要继续监听这个socket的话，需要再次把这个socket加入到EPOLL队列里
 	 */
 	event.events = EPOLLIN | EPOLLET;
-	stSocketEvent stSockEvent;
-	event.data.fd = iFd;
+	stEpollItem stSockItem;
+	stSockItem.fd = iFd;
+	stSockItem.enEventFlag = emTodoOp;
+	stSockItem.pData = pData;
+
+	m_arrEpollItem[iFd] = stSockItem;
+
+	//event.data.fd = iFd; //用自定义结构的ptr代替传统的fd来区分信息
+	event.data.ptr = reinterpret_cast<void*>(&m_arrEpollItem[iFd]);
 	/*
 	EPOLL_CTL_ADD：注册新的fd到epfd中；
 	EPOLL_CTL_MOD：修改已经注册的fd的监听事件；
@@ -391,7 +392,7 @@ EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果�
 		return EPOLL_CNTL_FAILED;
 	}
 	++m_iEvents;
-	printf("add fd,iEventCount:%d,op:%d\n",m_iEvents, type);
+	printf("add fd,iEventCount:%d,op:%d\n",m_iEvents, emTodoOp);
 
 	m_vecFds.push_back(iFd);
 
@@ -451,6 +452,26 @@ int CReactor::ProcessSocketEvent() { //TODO 调用Handler来做实现
 
 	for(int i = 0; i < m_iEpollSucc; ++i)
 	{
+		stEpollItem* stItem= reinterpret_cast<stEpollItem*>(m_arrEpollEvents[i].data.ptr);
+		if (stItem->fd == m_iSvrFd) {
+			int iRet = m_pTcpNetHandler->HandleEvent(m_iSvrFd, stItem->enEventFlag);
+			if (0 != iRet) {
+				return iRet;
+			}
+		}
+		else if (stItem->enEventFlag == TCP_SERVER_READ) {
+			int iRet = m_pTcpNetHandler->HandleEvent(stItem->fd, stItem->enEventFlag);
+			if (0 != iRet ) {
+				return iRet;
+			}
+		}
+		else if (stItem->enEventFlag == UDP_READ) {
+			int iRet = m_pTcpNetHandler->HandleEvent(stItem->fd, stItem->enEventFlag);
+			if (0 != iRet ) {
+				return iRet;
+			}
+		}
+		/* 传统只根据Fd进行处理的办法，无法适应复杂的代码编写结构
 		 if (m_arrEpollEvents[i].data.fd == m_iSvrFd) {
 			 int iRet = m_pTcpNetHandler->HandleEvent(m_iSvrFd,1);
 			 if (0 != iRet ) {
@@ -462,7 +483,7 @@ int CReactor::ProcessSocketEvent() { //TODO 调用Handler来做实现
 			 if (0 != iRet ) {
 			 	return iRet;
 			 }
-		 }
+		 }*/
 
 	}
 
