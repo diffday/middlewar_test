@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <sys/stat.h>
 #include "global_define.h"
@@ -131,11 +132,12 @@ int CTcpNetHandler::DoRecv(int iConn) {
 		uint32_t dwCmd = static_cast<uint32_t>(atoll(mapPara.find("cmd")->second.c_str()));
 		int iIndex = dwCmd % g_mapCmdDLL.size();
 		int iCount = 0;
-		for (std::map<int, const char*>::iterator it=g_mapCmdDLL.begin();it!=g_mapCmdDLL.end();++it) {
+		for (std::map<int, const char*>::const_iterator it=g_mapCmdDLL.begin();it!=g_mapCmdDLL.end();++it) {
 			if (iIndex == iCount) {
 				iRet = m_pMQManager->GetMsgQueue(it->first, rpMsgq);
-				printf("cmd %d will put request into MSGQ %d\n",dwCmd,it->first);
+				printf("cmd %d will put request into MSGQ %x\n",dwCmd,it->first);
 				assert(iRet == 0);
+break;
 			}
 			++iCount;
 		}
