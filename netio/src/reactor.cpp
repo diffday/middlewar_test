@@ -124,15 +124,26 @@ int CTcpNetHandler::DoRecv(int iConn) {
 	for (;it!=mapPara.end();++it){
 		printf("%s=%s\n",(it->first).c_str(),(it->second).c_str());
 	}*/
-	/*
-	for () {
 
+	map<string,string> mapPara;
+	strPairAppendToMap(buf,mapPara);
+	if (mapPara.find("cmd") != mapPara.end()) {
+		uint32_t dwCmd = static_cast<uint32_t>(atoll(mapPara.find("cmd")->second.c_str()));
+		int iIndex = dwCmd % g_mapCmdDLL.size();
+		int iCount = 0;
+		for (std::map<int, const char*>::iterator it=g_mapCmdDLL.begin();it!=g_mapCmdDLL.end();++it) {
+			if (iIndex == iCount) {
+				iRet = m_pMQManager->GetMsgQueue(it->first, rpMsgq);
+				printf("cmd %d will put request into MSGQ %d\n",dwCmd,it->first);
+				assert(iRet == 0);
+			}
+			++iCount;
+		}
 	}
-	if (g_mapCmdDLL[""]) {
 
-	}*/
+	/*
 	iRet = m_pMQManager->GetMsgQueue(NET_IO_BACK_MSQ_KEY, rpMsgq);
-	assert(iRet == 0);
+	assert(iRet == 0);*/
 	//printf("GetMsgQueue %x, %d\n",NET_IO_BACK_MSQ_KEY,iRet);
 
 	MsgBuf_T stMsg;

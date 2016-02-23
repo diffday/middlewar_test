@@ -11,18 +11,18 @@ int main(int argc, char** argv)
 	CMsgQManager oCMQManager;
 	oCMQManager.AddMsgQueue(NET_IO_BACK_MSQ_KEY);
 
-	/*
+
 	map<int,const char*>::const_iterator it =g_mapCmdDLL.begin();
 	for (;it!=g_mapCmdDLL.end();++it) {
 		oCMQManager.AddMsgQueue(it->first);
-	}*/
+	}
 
 	//CServiceLoader oServiceLoader;
 	//oServiceLoader.LoadServices();
 	//oServiceLoader.CleanServices();
 
 	CReactor oReactor;
-	int iRet = oReactor.Init(7890, NET_IO_USOCK_PATH);
+	int iRet = oReactor.Init(NETIO_PORT, NET_IO_USOCK_PATH);
 
 	CTcpNetHandler* oTcpNetHandler = new CTcpNetHandler;
 	oTcpNetHandler->RegisterMqManager(&oCMQManager);
