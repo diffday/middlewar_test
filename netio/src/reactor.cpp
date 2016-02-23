@@ -36,6 +36,23 @@ int CNetIOUserEventHandler::CheckEvent(void* pvParam) {
 }
 
 int CNetIOUserEventHandler::OnEventFire(void* pvParam) {
+	CMsgQueue* rpMsgq;
+	int iRet = m_pMQManager->GetMsgQueue(NET_IO_BACK_MSQ_KEY, rpMsgq);
+	assert(iRet == 0);
+
+	MsgBuf_T stMsg;
+	stMsg.lType=RESPONSE;
+	int Len;
+	rpMsgq->GetMsg(&stMsg,Len);
+	printf("get Msg lenth:%d,data is %s\n",Len,stMsg.sBuf);
+
+	map<string,string> mapPara;
+	strPairAppendToMap(stMsg.sBuf,mapPara);
+	int ifd = static_cast<int>(atoll(mapPara.find("fd")->second.c_str()));
+
+	m_pReactor->AddToWatchList(ifd,TCP_SERVER_SEND);
+		//snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+1,"%s",buf);
+
 
 	return 0;
 }
@@ -137,7 +154,7 @@ int CTcpNetHandler::DoRecv(int iConn) {
 				iRet = m_pMQManager->GetMsgQueue(it->first, rpMsgq);
 				printf("cmd %d will put request into MSGQ %x\n",dwCmd,it->first);
 				assert(iRet == 0);
-break;
+				break;
 			}
 			++iCount;
 		}
@@ -150,7 +167,7 @@ break;
 
 	MsgBuf_T stMsg;
 	stMsg.lType=REQUEST;
-	snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+1,"%s",buf);
+	snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+16,"fd=%d&%s",buf);
 
 	iRet = rpMsgq->PutMsg(&stMsg,strlen(stMsg.sBuf) + sizeof(stMsg.lType));
 	if (0 != iRet) {
@@ -635,6 +652,7 @@ int CReactor::RegisterUSockUdpHandler(CUSockUdpHandler* pUSockUdpHandler) {
 
 int CReactor::RegisterUserEventHandler(CUserEventHandler* pUserEventHandler) {
 	m_pUserEventHandler = pUserEventHandler;
+	m_pUserEventHandler->m_pReactor = this;
 	return 0;
 }
 

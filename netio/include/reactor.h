@@ -66,6 +66,7 @@ public:
 	virtual ~CUserEventHandler() {};
 	virtual int OnEventFire(void* pvParam = 0) = 0;
 	virtual int CheckEvent(void* pvParam = 0) = 0;
+	CReactor* m_pReactor;
 };
 
 class CContainerEventHandler : public CUserEventHandler {
@@ -83,6 +84,7 @@ public:
 	int OnEventFire(void* pvParam= 0);
 	int CheckEvent(void* pvParam= 0);
 	CMsgQManager* m_pMQManager;
+
 	int RegisterMqManager(CMsgQManager* m_pMQManager);
 	~CNetIOUserEventHandler(){};
 };
@@ -132,6 +134,8 @@ public:
 class CReactor {
 	friend class CTcpNetHandler;
 	friend class CUSockUdpHandler;
+	friend class CNetIOUserEventHandler;
+	friend class CContainerEventHandler;
 public:
 	CReactor();
 	~CReactor();
