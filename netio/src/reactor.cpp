@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include "global_define.h"
 #include "assert.h"
+#include "string_helper.h"
 
 
 int CContainerEventHandler::CheckEvent(void* pvParam) {
@@ -116,6 +117,13 @@ int CTcpNetHandler::DoRecv(int iConn) {
 
 	printf("the recv info is : %s\n",buf);
 	CMsgQueue* rpMsgq;
+	/*
+	map<string,string> mapPara;
+	strPairAppendToMap(buf,mapPara);
+	map<string,string>::iterator it = mapPara.begin();
+	for (;it!=mapPara.end();++it){
+		printf("%s=%s\n",(it->first).c_str(),(it->second).c_str());
+	}*/
 	/*
 	for () {
 
