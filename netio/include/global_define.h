@@ -14,17 +14,11 @@
 #include <map>
 using namespace std;
 
-/**
- * 消息队列中的结构定义
- */
-typedef struct tagMsgBuf { //允许的默认值请提前用ipcs -l 查看上限
-	long lType;
-	char sBuf[MAX_MSG_SIZE];
-} MsgBuf_T;
 
 enum errcode {
 	CREATE_MSGQ_FAILED = 1,
 	CNTL_MSGQ_BYTES_FAILED,
+	MSGQ_NO_EXIST,
 	MSG_TOO_LONG,
 	SEND_MSG_FAILED,
 	RECV_MSG_FAILED,
@@ -44,6 +38,9 @@ enum errcode {
 	FCNTL_USOCKET_FAILED,
 };
 
+static const int NET_IO_BACK_MSQ_KEY = 0xccccc;
+static const char* NET_IO_USOCK_PATH = "/tmp/app/0001/0001_0";
+
 static const std::map<int, const char*>::value_type init_cmd_dll_value[] =
 {
 std::map<int, const char*>::value_type( 0xccccd, "/home/chenzhuo/test/middlewar_test/netio/so/libverto.so.0.0"),
@@ -51,7 +48,5 @@ std::map<int, const char*>::value_type( 0xcccce, "/home/chenzhuo/test/middlewar_
 };
 
 static const std::map<int, const char*> g_mapCmdDLL(init_cmd_dll_value, init_cmd_dll_value+sizeof(init_cmd_dll_value)/sizeof(init_cmd_dll_value[0]));
-
-static const char* NET_IO_USOCK_PATH = "/tmp/app/0001/0001_0";
 
 #endif /* NETIO_INCLUDE_GLOBAL_DEFINE_H_ */

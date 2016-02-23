@@ -19,8 +19,13 @@ CMsgQueue::~CMsgQueue() {
 
 int CMsgQueue::GetMsg(MsgBuf_T *pBuf, int& dwBufLen) {
 	int iRet = 0;
-	iRet = msgrcv(m_iMsgQId, (struct msgbuf*) pBuf,
-	MAX_MSG_SIZE, pBuf->lType, IPC_NOWAIT);
+	/*
+	 *struct msgbuf {
+		long mtype; // type of message
+		char mtext[1]; //message text,利用指针的转型来强制解释type后存放的任意数据类型
+	};
+	 */
+	iRet = msgrcv(m_iMsgQId, (struct msgbuf*) pBuf,	MAX_MSG_SIZE, pBuf->lType, IPC_NOWAIT);
 	if (iRet < 0) {
 		m_sLastErrMsg = strerror(errno);
 		return RECV_MSG_FAILED;
@@ -116,12 +121,13 @@ int CMsgQManager::delMsgQueue(int dwGroupId) {
 }
 
 int CMsgQManager::GetMsgQueue(int dwGroupId, CMsgQueue*& rpMsgq) {
-	int iRet = -1;
+	int iRet = MSGQ_NO_EXIST;
 	map<int, CMsgQueue*>::iterator it = m_mapGroupMsgqs.begin();
 	for (; it != m_mapGroupMsgqs.end(); ++it) {
-		if (it->first != dwGroupId) {
+		if (it->first == dwGroupId) {
 			iRet = 0;
 			rpMsgq = it->second;
+			return iRet;
 		}
 	}
 	return iRet;
@@ -131,7 +137,7 @@ CMsgQManager::CMsgQManager() {}
 CMsgQManager::~CMsgQManager(){
 	map<int, CMsgQueue*>::iterator it = m_mapGroupMsgqs.begin();
 	for (;it!=m_mapGroupMsgqs.end();++it) {
-		it->second->Fini();
+		//it->second->Fini();
 	}
 	m_mapGroupMsgqs.clear();
 }

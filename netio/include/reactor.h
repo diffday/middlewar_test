@@ -61,9 +61,36 @@ struct stEpollItem {
 	}
 };
 
+class CUserEventHandler {
+public:
+	virtual ~CUserEventHandler() {};
+	virtual int OnEventFire(void* pvParam = 0) = 0;
+	virtual int CheckEvent(void* pvParam = 0) = 0;
+};
+
+class CContainerEventHandler : public CUserEventHandler {
+public:
+	int OnEventFire(void* pvParam= 0);
+	int CheckEvent(void* pvParam= 0);
+	CMsgQManager* m_pMQManager;
+	key_t m_iMqKey;
+	int RegisterMqInfo(CMsgQManager* m_pMQManager, key_t iMqKey);
+	~CContainerEventHandler(){};
+};
+
+class CNetIOUserEventHandler : public CUserEventHandler {
+public:
+	int OnEventFire(void* pvParam= 0);
+	int CheckEvent(void* pvParam= 0);
+	CMsgQManager* m_pMQManager;
+	int RegisterMqManager(CMsgQManager* m_pMQManager);
+	~CNetIOUserEventHandler(){};
+};
+
+
 class CNetHandler {
 public:
-	virtual ~CNetHandler() = 0;
+	virtual ~CNetHandler() = 0;//定义虚析构是一个好习惯，好让父类有虚函数表入口。否则向上转型利用时，将不能享受多态的好处
 public:
 	virtual int HandleEvent(int iConn, int iType) = 0;
 };
@@ -90,7 +117,6 @@ class CUSockUdpHandler : public CNetHandler {
 public:
 	CUSockUdpHandler();
 	~CUSockUdpHandler();
-	int RegisterMqManager(CMsgQManager* m_pMQManager);
 public:
 	int HandleEvent(int iConn, int iType);
 private:
@@ -101,7 +127,6 @@ private:
 
 public:
 	CReactor* m_pReactor;
-	CMsgQManager* m_pMQManager;
 };
 
 class CReactor {
@@ -115,12 +140,14 @@ public:
 	int RegisterTcpNetHandler(CTcpNetHandler* pTcpNetHandler);
 	//USock默认用UDP SVR服务
 	int RegisterUSockUdpHandler(CUSockUdpHandler* pUSockUdpHandler);
+	int RegisterUserEventHandler(CUserEventHandler* pUserEventHandler);
 
 	void RunEventLoop();
 protected:
 	int CheckEvents();
-	int ProcessSocketEvent();
+	int ProcessEvent();
 private:
+	//Epoll事件，加入或更新
 	int AddToWatchList(int iFd, EventFlag_t type, void* pData = NULL);
 	int RemoveFromWatchList(int iFd);
 	int InitTcpSvr(int iTcpSvrPort);
@@ -133,6 +160,7 @@ private:
 	int m_iUSockFd; //接收容器回包唤醒的Usock
 	CTcpNetHandler* m_pTcpNetHandler;
 	CUSockUdpHandler* m_pUSockUdpHandler;
+	CUserEventHandler* m_pUserEventHandler;
 	char* m_pszBuf;
 	int m_iBufLen;
 
@@ -145,6 +173,7 @@ private:
 	int m_iEpollSucc;//每次Epoll_event的handle处理结果，用于在方法间传递信息
 
 	stEpollItem m_arrEpollItem[MAX_EPOLL_EVENT_NUM]; //用于epoll信息的保存
+	//key_t iBackMsgKey;
 };
 
 

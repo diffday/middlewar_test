@@ -18,6 +18,30 @@
 #include <sys/stat.h>
 #include "global_define.h"
 #include "assert.h"
+
+
+int CContainerEventHandler::CheckEvent(void* pvParam) {
+	return 0;
+}
+
+int CContainerEventHandler::OnEventFire(void* pvParam) {
+	return 0;
+}
+
+
+int CNetIOUserEventHandler::CheckEvent(void* pvParam) {
+	return 0;
+}
+
+int CNetIOUserEventHandler::OnEventFire(void* pvParam) {
+
+	return 0;
+}
+
+int CNetIOUserEventHandler::RegisterMqManager(CMsgQManager* pMQManager) {
+	m_pMQManager = pMQManager;
+}
+
 CNetHandler::~CNetHandler() { }
 
 //=====CTcpNetHandler start
@@ -76,6 +100,7 @@ int CTcpNetHandler::DoConn(int iConn) {
 int CTcpNetHandler::DoRecv(int iConn) {
 	int nread;
 	char buf[1000] = {0};
+	int iRet = 0;
 	nread = read(iConn, buf, 1000);//读取客户端socket流
 
 	if (nread == 0) {
@@ -90,6 +115,30 @@ int CTcpNetHandler::DoRecv(int iConn) {
 	}
 
 	printf("the recv info is : %s\n",buf);
+	CMsgQueue* rpMsgq;
+	/*
+	for () {
+
+	}
+	if (g_mapCmdDLL[""]) {
+
+	}*/
+	iRet = m_pMQManager->GetMsgQueue(NET_IO_BACK_MSQ_KEY, rpMsgq);
+	assert(iRet == 0);
+	//printf("GetMsgQueue %x, %d\n",NET_IO_BACK_MSQ_KEY,iRet);
+
+	MsgBuf_T stMsg;
+	stMsg.lType=REQUEST;
+	snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+1,"%s",buf);
+
+	iRet = rpMsgq->PutMsg(&stMsg,strlen(stMsg.sBuf) + sizeof(stMsg.lType));
+	if (0 != iRet) {
+		printf("putinto msgq failed,%d,%s\n",iRet,rpMsgq->m_sLastErrMsg.c_str());
+	}
+
+	//m_arrEpollItem[iFd].enEventFlag = TCP_SERVER_SEND; //
+
+	//m_pReactor->AddToWatchList();
 
 	write(iConn, buf, nread);//响应客户端
 	m_pReactor->RemoveFromWatchList(iConn);
@@ -130,10 +179,6 @@ int CUSockUdpHandler::HandleEvent(int iConn, int iType) {
 	return 0;
 }
 
-int CUSockUdpHandler::RegisterMqManager(CMsgQManager* pMQManager) {
-	m_pMQManager = pMQManager;
-}
-
 int CUSockUdpHandler::DoConn(int iConn) {
 	return 0;
 }
@@ -152,7 +197,7 @@ int CUSockUdpHandler::DoClose(int iConn) {
 
 //=====CUSockUdpHandler end
 
-CReactor::CReactor() : m_pTcpNetHandler(NULL),m_pUSockUdpHandler(NULL),m_iSvrFd(0),m_iUSockFd(0),m_iEpollSucc(0) {
+CReactor::CReactor() : m_pTcpNetHandler(NULL),m_pUSockUdpHandler(NULL),m_iSvrFd(0),m_iUSockFd(0),m_iEpollSucc(0),m_pUserEventHandler(NULL) {
 	m_pszBuf=new char[10240];
 	m_iEvents = 0;
 
@@ -392,16 +437,25 @@ EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果�
 	EPOLL_CTL_MOD：修改已经注册的fd的监听事件；
 	EPOLL_CTL_DEL：从epfd中删除一个fd；
 	 */
-	//printf("epoll fd:%d\n",m_iEpFd);
-	int iRet = epoll_ctl(m_iEpFd, EPOLL_CTL_ADD, iFd, &event);
+	int op = EPOLL_CTL_ADD;
+	for(vector<int>::iterator it=m_vecFds.begin();it != m_vecFds.begin(); ++it) {
+		if ((*it) == iFd) {
+			op = EPOLL_CTL_MOD;
+			break;
+		}
+	}
+	/*int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)*/
+	int iRet = epoll_ctl(m_iEpFd, op, iFd, &event);
 	if (iRet <  0) {
 		printf("%d,error:%d,info:%s\n",iRet,errno,strerror(errno));
 		return EPOLL_CNTL_FAILED;
 	}
-	++m_iEvents;
-	printf("add fd,iEventCount:%d,op:%d\n",m_iEvents, emTodoOp);
 
-	m_vecFds.push_back(iFd);
+	if (EPOLL_CTL_MOD != op) {
+		++m_iEvents;
+		m_vecFds.push_back(iFd);
+	}
+	printf("add fd,iEventCount:%d,op:%d\n",m_iEvents, emTodoOp);
 
 	return 0;
 }
@@ -424,6 +478,13 @@ int  CReactor::RemoveFromWatchList(int iFd) {
 }
 
 int CReactor::CheckEvents() {
+	if (m_pUserEventHandler) {
+		int iRet = m_pUserEventHandler->CheckEvent();
+		if (iRet != 0) {
+			printf("error happed when checkUserEvent %d\n",iRet);
+		}
+	}
+
 	if (m_iEvents > 0) {//进程间通信也放入监听。当container有数据返回到来时，可发数据包及时唤醒
 		m_iEpollSucc = epoll_wait(m_iEpFd, m_arrEpollEvents, m_iEvents, DEFAULT_EPOLL_WAIT_TIME); //超时时间单位是毫秒
 		//printf("event count %d\n",m_iEpollSucc);
@@ -435,13 +496,13 @@ int CReactor::CheckEvents() {
 		}
 	}
 	else {
-		printf("nothing to wait,m_nEvent:%d\n",m_iEvents);
+		printf("nothing to do,m_nEvent:%d\n",m_iEvents);
 	}
 
 	return 0;
 }
 
-int CReactor::ProcessSocketEvent() { //TODO 调用Handler来做实现
+int CReactor::ProcessEvent() {
 	/*
 	 *
 	typedef union epoll_data {
@@ -456,6 +517,9 @@ int CReactor::ProcessSocketEvent() { //TODO 调用Handler来做实现
 		epoll_data_t data;        //User data variable
 	};
 	 */
+	if (m_pUserEventHandler) {
+		m_pUserEventHandler->OnEventFire();
+	}
 
 	for(int i = 0; i < m_iEpollSucc; ++i)
 	{
@@ -477,6 +541,15 @@ int CReactor::ProcessSocketEvent() { //TODO 调用Handler来做实现
 			if (0 != iRet ) {
 				return iRet;
 			}
+		}
+		else if (stItem->enEventFlag == TCP_SERVER_SEND) {
+			int iRet = m_pTcpNetHandler->HandleEvent(stItem->fd, stItem->enEventFlag);
+			if (0 != iRet ) {
+				return iRet;
+			}
+		}
+		else  {
+			printf("无效的请求应不处理丢弃\n");//socket事件不对
 		}
 		/* 传统只根据Fd进行处理的办法，无法适应复杂的代码编写结构
 		 if (m_arrEpollEvents[i].data.fd == m_iSvrFd) {
@@ -500,7 +573,6 @@ int CReactor::ProcessSocketEvent() { //TODO 调用Handler来做实现
 
 void CReactor::RunEventLoop() {
 	int iRet = 0;
-	int count = 0;
 	AddToWatchList(m_iSvrFd, TCP_SERVER_ACCEPT); //将两大IO通道加入监听
 	AddToWatchList(m_iUSockFd, TCP_SERVER_ACCEPT);
 	while (1) {
@@ -515,14 +587,14 @@ void CReactor::RunEventLoop() {
 			struct timeval tv;
 			tv.tv_sec = 0;
 			tv.tv_usec = DEFAULT_EPOLL_WAIT_TIME;
-			//int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* errorfds, struct timeval* timeout);
+			/*int select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* errorfds, struct timeval* timeout);*/
 			select(0,NULL,NULL,NULL,&tv); //纯纯的sleep
 			//printf("just sleep a little\n");
 		}
 
-		iRet = this->ProcessSocketEvent();
-		if (iRet || count>=2000) {
-			count++;
+		iRet = this->ProcessEvent();
+		if (iRet) {
+			printf("something error happen!%d\n",iRet);
 			break;
 		}
 	}
@@ -537,6 +609,11 @@ int CReactor::RegisterTcpNetHandler(CTcpNetHandler* pTcpNetHandler) {
 int CReactor::RegisterUSockUdpHandler(CUSockUdpHandler* pUSockUdpHandler) {
 	m_pUSockUdpHandler = pUSockUdpHandler;
 	m_pUSockUdpHandler->m_pReactor = this;
+	return 0;
+}
+
+int CReactor::RegisterUserEventHandler(CUserEventHandler* pUserEventHandler) {
+	m_pUserEventHandler = pUserEventHandler;
 	return 0;
 }
 

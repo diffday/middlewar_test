@@ -14,6 +14,20 @@
 #include <string>
 #include "global_define.h"
 using namespace std;
+
+typedef enum {
+	REQUEST = 1, //msg的type不能接受0，所以用1起始
+	RESPONSE = 2,
+} MSGTYPE_t;
+
+/**
+ * 消息队列中的结构定义
+ */
+typedef struct tagMsgBuf { //允许的默认值请提前用ipcs -l 查看上限
+	long lType;
+	char sBuf[MAX_MSG_SIZE - 8];
+} MsgBuf_T;
+
 class CMsgQManager;
 
 class CMsgQueue{
@@ -27,6 +41,7 @@ public:
 	int PutMsg(const MsgBuf_T *pBuf, int dwBufLen);
 	int GetMsg(MsgBuf_T *pBuf, int& dwBufLen);
 	int GetMsgQKey() { return m_iKey;}
+	string m_sLastErrMsg;
 	//int Fini();
 private:
 	int Fini();
@@ -34,7 +49,6 @@ private:
 private:
 	int m_iMsgQId;
 	key_t m_iKey;
-	string m_sLastErrMsg;
 };
 
 class CMsgQManager {

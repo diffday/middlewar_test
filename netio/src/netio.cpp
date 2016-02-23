@@ -9,25 +9,33 @@ using namespace std;
 int main(int argc, char** argv)
 {
 	CMsgQManager oCMQManager;
+	oCMQManager.AddMsgQueue(NET_IO_BACK_MSQ_KEY);
 
+	/*
 	map<int,const char*>::const_iterator it =g_mapCmdDLL.begin();
 	for (;it!=g_mapCmdDLL.end();++it) {
 		oCMQManager.AddMsgQueue(it->first);
-	}
+	}*/
 
-	CServiceLoader oServiceLoader;
-	oServiceLoader.LoadServices();
-	oServiceLoader.CleanServices();
+	//CServiceLoader oServiceLoader;
+	//oServiceLoader.LoadServices();
+	//oServiceLoader.CleanServices();
 
 	CReactor oReactor;
 	int iRet = oReactor.Init(7890, NET_IO_USOCK_PATH);
+
 	CTcpNetHandler* oTcpNetHandler = new CTcpNetHandler;
 	oTcpNetHandler->RegisterMqManager(&oCMQManager);
+
 	CUSockUdpHandler* oUsockUdpHandler = new CUSockUdpHandler;
-	oUsockUdpHandler->RegisterMqManager(&oCMQManager);
+	//oUsockUdpHandler->RegisterMqManager(&oCMQManager);
+	CNetIOUserEventHandler* oNetIOUserHandler = new CNetIOUserEventHandler;
+	oNetIOUserHandler->RegisterMqManager(&oCMQManager);
+
 	oReactor.RegisterTcpNetHandler(oTcpNetHandler);
 	oReactor.RegisterUSockUdpHandler(oUsockUdpHandler);
-	cout<<iRet<<endl;
+	oReactor.RegisterUserEventHandler(oNetIOUserHandler);
+	cout<<"All init result:"<<iRet<<endl;
 	oReactor.RunEventLoop();
 
 	/*
