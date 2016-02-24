@@ -32,7 +32,7 @@ inline void SplitString(const std::string& sSrc, std::string::value_type cSep, s
     vecString.push_back(sTmp);  // add final element
 }
 
-std::string Trim(const std::string &s)
+inline std::string Trim(const std::string &s)
 {
 	if (s.length() == 0)
 	{

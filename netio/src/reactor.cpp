@@ -8,7 +8,6 @@
 #include "reactor.h"
 #include <unistd.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/un.h>
 #include <fcntl.h>
@@ -41,18 +40,35 @@ int CNetIOUserEventHandler::OnEventFire(void* pvParam) {
 	assert(iRet == 0);
 
 	MsgBuf_T stMsg;
+	stMsg.Reset();
 	stMsg.lType=RESPONSE;
-	int Len;
-	rpMsgq->GetMsg(&stMsg,Len);
-	printf("get Msg lenth:%d,data is %s\n",Len,stMsg.sBuf);
+	int Len = 0;
+	iRet = rpMsgq->GetMsg(&stMsg,Len);
+	if (iRet == 0 && Len == 0) {
+		//printf("no msg to send now\n");
+		return 0;
+	}
+
+	printf("get Msg lenth:%d,data is %s,error:%s\n",Len,stMsg.sBuf,rpMsgq->m_sLastErrMsg.c_str());
 
 	map<string,string> mapPara;
 	strPairAppendToMap(stMsg.sBuf,mapPara);
 	int ifd = static_cast<int>(atoll(mapPara.find("fd")->second.c_str()));
+	snprintf(stMsg.sBuf,sizeof(stMsg.sBuf),"%s",mapPara.find("resp")->second.c_str());
+	m_pReactor->m_arrMsg[ifd] = stMsg;
 
-	m_pReactor->AddToWatchList(ifd,TCP_SERVER_SEND);
+	stTcpSockItem stSock;
+	stSock.fd = ifd;
+	stSock.enEventFlag = TCP_SERVER_SEND;
+	string clientIp = mapPara.find("cliIp")->second;
+	int family = atoi(mapPara.find("family")->second.c_str());
+	int port = atoi(mapPara.find("cliPort")->second.c_str());
+	stSock.stSockAddr_in.sin_port = port;
+	stSock.stSockAddr_in.sin_addr.s_addr = inet_addr(clientIp.c_str());
+	stSock.stSockAddr_in.sin_family = family;
+
+	m_pReactor->AddToWatchList(ifd,TCP_SERVER_SEND,&stSock);
 		//snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+1,"%s",buf);
-
 
 	return 0;
 }
@@ -111,7 +127,14 @@ int CTcpNetHandler::DoConn(int iConn) {
 	}
 
 	printf("==do on conn operation==, the conn fd is :%d\n",iConnfd);
-	m_pReactor->AddToWatchList(iConnfd, TCP_SERVER_READ);
+
+	stTcpSockItem stTcpSock;
+	stTcpSock.fd = iConnfd;
+	stTcpSock.enEventFlag = TCP_SERVER_READ;
+	stTcpSock.stSockAddr_in = stCliAddr;
+	m_pReactor->m_arrTcpSock[iConnfd] = stTcpSock;
+
+	m_pReactor->AddToWatchList(iConnfd, TCP_SERVER_READ, (void*)(&(m_pReactor->m_arrTcpSock[iConnfd])));
 
 	return 0;
 }
@@ -142,11 +165,12 @@ int CTcpNetHandler::DoRecv(int iConn) {
 	for (;it!=mapPara.end();++it){
 		printf("%s=%s\n",(it->first).c_str(),(it->second).c_str());
 	}*/
-
+	uint32_t dwCmd=0;
 	map<string,string> mapPara;
 	strPairAppendToMap(buf,mapPara);
 	if (mapPara.find("cmd") != mapPara.end()) {
-		uint32_t dwCmd = static_cast<uint32_t>(atoll(mapPara.find("cmd")->second.c_str()));
+		dwCmd = static_cast<uint32_t>(atoll(mapPara.find("cmd")->second.c_str()));
+		//printf("cmd is %x\n",dwCmd);
 		int iIndex = dwCmd % g_mapCmdDLL.size();
 		int iCount = 0;
 		for (std::map<int, const char*>::const_iterator it=g_mapCmdDLL.begin();it!=g_mapCmdDLL.end();++it) {
@@ -160,6 +184,7 @@ int CTcpNetHandler::DoRecv(int iConn) {
 		}
 	}
 
+	assert(dwCmd);
 	/*
 	iRet = m_pMQManager->GetMsgQueue(NET_IO_BACK_MSQ_KEY, rpMsgq);
 	assert(iRet == 0);*/
@@ -167,27 +192,35 @@ int CTcpNetHandler::DoRecv(int iConn) {
 
 	MsgBuf_T stMsg;
 	stMsg.lType=REQUEST;
-	snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+16,"fd=%d&%s",buf);
 
-	iRet = rpMsgq->PutMsg(&stMsg,strlen(stMsg.sBuf) + sizeof(stMsg.lType));
+	snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+100,"fd=%d&family=%d&cliIp=%s&cliPort=%d&%s",iConn,m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_family,inet_ntoa(m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_addr),m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_port,buf);
+
+	iRet = rpMsgq->PutMsg(&stMsg,strlen(stMsg.sBuf));
 	if (0 != iRet) {
 		printf("putinto msgq failed,%d,%s\n",iRet,rpMsgq->m_sLastErrMsg.c_str());
 	}
 
-	//m_arrEpollItem[iFd].enEventFlag = TCP_SERVER_SEND; //
+	m_pReactor->m_arrTcpSock[iConn].enEventFlag = TCP_SERVER_SEND; //
 
 	//m_pReactor->AddToWatchList();
 
-	write(iConn, buf, nread);//响应客户端
-	m_pReactor->RemoveFromWatchList(iConn);
+	//write(iConn, buf, nread);//响应客户端
+	//m_pReactor->RemoveFromWatchList(iConn);
 	return 0;
 }
 
 int CTcpNetHandler::DoSend(int iConn) {
+	write(iConn, m_pReactor->m_arrMsg[iConn].sBuf, strlen(m_pReactor->m_arrMsg[iConn].sBuf));//响应客户端
+	DoClose(iConn);
 	return 0;
 }
 
 int CTcpNetHandler::DoClose(int iConn) {
+	m_pReactor->m_arrTcpSock[iConn].Reset();
+	m_pReactor->RemoveFromWatchList(iConn);
+	int i = close(iConn);
+	printf("close %d,i:%d\n",iConn,i);
+
 	return 0;
 }
 
@@ -329,6 +362,11 @@ int CReactor::InitTcpSvr(int iTcpSvrPort) {
 		close(m_iSvrFd);
 		return FCNTL_SOCKET_FAILED;
 	}
+	stTcpSockItem stTcpSock;
+	stTcpSock.fd = m_iSvrFd;
+	stTcpSock.enEventFlag = TCP_SERVER_ACCEPT;
+	stTcpSock.stSockAddr_in = stServaddr;
+	m_arrTcpSock[m_iSvrFd] = stTcpSock;
 
 	return 0;
 }
@@ -397,6 +435,12 @@ int CReactor::InitUSockUdpSvr(const char* pszUSockPath) {
 		return FCNTL_SOCKET_FAILED;
 	}
 
+	stTcpSockItem stTcpSock;
+	stTcpSock.fd = m_iUSockFd;
+	stTcpSock.enEventFlag = UDP_READ;
+
+	m_arrTcpSock[m_iUSockFd] = stTcpSock;
+
 	return 0;
 }
 
@@ -434,7 +478,73 @@ int CReactor::Init(int iTcpSvrPort, const char* pszUSockPath) {
 	return 0;
 }
 
-int CReactor::AddToWatchList(int iFd, EventFlag_t emTodoOp, void* pData) {
+int CReactor::AddToWatchList(int iFd, EventFlag_t emTodoOp, void* pData,bool bCheckSock) {
+
+
+	stTcpSockItem* pStTempSock = reinterpret_cast<stTcpSockItem*>(pData);
+
+	if (bCheckSock) {
+		int iSockValid = 0;
+		int inWatchList = 0;
+		vector<int>::iterator it = m_vecFds.begin();
+		//当socket信息还有效，才重新触发Epoll事件
+		/*
+		 * 1. 当监听队列中有此Fd，检查客户端等信息是否一致
+		 * 2. 当监听队列中无此Fd, 检查传入的数据是否有效
+		 * 3. 已关闭的fd，会将数据区的EventFlag置为无效值
+		 */
+		for (;it!=m_vecFds.end();++it) {
+			if (iFd == (*it)) {
+				inWatchList = 1;
+				break;
+			}
+		}
+
+		if (inWatchList) {
+			printf("in watchlist:%d\n",iFd);
+			if (m_arrTcpSock[iFd].enEventFlag == NONE_FLAG) {
+				iSockValid = 0;
+
+			}
+			else if (pData != &m_arrTcpSock[iFd]) {
+				iSockValid = 0;
+				/*
+				printf("---do match sin_port:%d\n",pStTempSock->stSockAddr_in.sin_port == m_arrTcpSock[iFd].stSockAddr_in.sin_port);
+				printf("---do match sin_family:%d\n",pStTempSock->stSockAddr_in.sin_family == m_arrTcpSock[iFd].stSockAddr_in.sin_family);
+				printf("---do match sin_addr:%d\n",(strcmp(inet_ntoa(pStTempSock->stSockAddr_in.sin_addr),inet_ntoa(m_arrTcpSock[iFd].stSockAddr_in.sin_addr)) == 0));*/
+				//stTcpSockItem* pStTempSock = reinterpret_cast<stTcpSockItem*>(pData);
+				if ((pStTempSock->stSockAddr_in.sin_port == m_arrTcpSock[iFd].stSockAddr_in.sin_port)
+					&& (pStTempSock->stSockAddr_in.sin_family == m_arrTcpSock[iFd].stSockAddr_in.sin_family)
+					&& (strcmp(inet_ntoa(pStTempSock->stSockAddr_in.sin_addr),inet_ntoa(m_arrTcpSock[iFd].stSockAddr_in.sin_addr)) == 0)) {
+					iSockValid = 1;
+				}
+			}
+		}
+		else {
+			if (m_arrTcpSock[iFd].enEventFlag == NONE_FLAG) {
+				iSockValid = 0;
+			}
+			else if (pData != &m_arrTcpSock[iFd]) {
+				iSockValid = 0;
+				//stTcpSockItem* pStTempSock = reinterpret_cast<stTcpSockItem*>(pData);
+				if ((pStTempSock->stSockAddr_in.sin_port == m_arrTcpSock[iFd].stSockAddr_in.sin_port)
+						&& (pStTempSock->stSockAddr_in.sin_family == m_arrTcpSock[iFd].stSockAddr_in.sin_family)
+						&& (strcmp(inet_ntoa(pStTempSock->stSockAddr_in.sin_addr),inet_ntoa(m_arrTcpSock[iFd].stSockAddr_in.sin_addr)) == 0)) {
+					iSockValid = 1;
+				}
+			}
+			else {
+				iSockValid = 1;
+			}
+		}
+
+		if (!iSockValid) {
+			printf("invalid socket:%d, skip\n",iFd);
+			return 0;
+		}
+	}
+
+
 	/*
 	 *
 	 typedef union epoll_data { //一般填一个fd参数即可
@@ -457,31 +567,48 @@ EPOLLOUT：表示对应的文件描述符可以写；
 EPOLLPRI：表示对应的文件描述符有紧急的数据可读（这里应该表示有带外数据到来）；
 EPOLLERR：表示对应的文件描述符发生错误；
 EPOLLHUP：表示对应的文件描述符被挂断；
+EPOLLRDHUP: 2.6.17内核当对端主动关闭socket时，会触发这个事件。之前是触发可读，当执行读收到EOF时，认为对方已关闭。
 EPOLLET： 将EPOLL设为边缘触发(Edge Triggered)模式，这是相对于默认的水平触发(Level Triggered)来说的。ET对一个事件（如可读），只会通知一次。但LT当事件持续（一直可读），会一直通知
 EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果还需要继续监听这个socket的话，需要再次把这个socket加入到EPOLL队列里
 	 */
-	event.events = EPOLLIN | EPOLLET;
+	event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
+	if (TCP_SERVER_SEND == emTodoOp || UDP_SEND == emTodoOp) {
+		event.events = EPOLLOUT | EPOLLET | EPOLLRDHUP;
+	}
+
+	/*
 	stEpollItem stSockItem;
 	stSockItem.fd = iFd;
 	stSockItem.enEventFlag = emTodoOp;
 	stSockItem.pData = pData;
 
-	m_arrEpollItem[iFd] = stSockItem;
+	m_arrEpollItem[iFd] = stSockItem;*/
 
 	//event.data.fd = iFd; //用自定义结构的ptr代替传统的fd来区分信息
-	event.data.ptr = reinterpret_cast<void*>(&m_arrEpollItem[iFd]);
+	if (pData != &m_arrTcpSock[iFd]) {
+		m_arrTcpSock[iFd].enEventFlag = pStTempSock->enEventFlag;
+		m_arrTcpSock[iFd].fd = iFd;
+		m_arrTcpSock[iFd].stSockAddr_in = pStTempSock->stSockAddr_in;
+		event.data.ptr = (void*)&m_arrTcpSock[iFd];
+	}
+	else {
+		event.data.ptr = pData;
+	}
+
 	/*
 	EPOLL_CTL_ADD：注册新的fd到epfd中；
 	EPOLL_CTL_MOD：修改已经注册的fd的监听事件；
 	EPOLL_CTL_DEL：从epfd中删除一个fd；
 	 */
 	int op = EPOLL_CTL_ADD;
-	for(vector<int>::iterator it=m_vecFds.begin();it != m_vecFds.begin(); ++it) {
-		if ((*it) == iFd) {
+
+	for(vector<int>::iterator it2=m_vecFds.begin();it2 != m_vecFds.end(); ++it2) {
+		if ((*it2) == iFd) {
 			op = EPOLL_CTL_MOD;
 			break;
 		}
 	}
+
 	/*int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)*/
 	int iRet = epoll_ctl(m_iEpFd, op, iFd, &event);
 	if (iRet <  0) {
@@ -518,6 +645,7 @@ int  CReactor::RemoveFromWatchList(int iFd) {
 int CReactor::CheckEvents() {
 	if (m_pUserEventHandler) {
 		int iRet = m_pUserEventHandler->CheckEvent();
+
 		if (iRet != 0) {
 			printf("error happed when checkUserEvent %d\n",iRet);
 		}
@@ -537,7 +665,7 @@ int CReactor::CheckEvents() {
 		printf("nothing to do,m_nEvent:%d\n",m_iEvents);
 	}
 
-	return 0;
+	return m_iEvents | 1;
 }
 
 int CReactor::ProcessEvent() {
@@ -561,8 +689,18 @@ int CReactor::ProcessEvent() {
 
 	for(int i = 0; i < m_iEpollSucc; ++i)
 	{
-		stEpollItem* stItem= reinterpret_cast<stEpollItem*>(m_arrEpollEvents[i].data.ptr);
-		if (stItem->fd == m_iSvrFd) {
+
+		 //TODO 这里的UDP处理不完善
+		stTcpSockItem* stItem =	reinterpret_cast<stTcpSockItem*>(m_arrEpollEvents[i].data.ptr);
+		if ((m_arrEpollEvents[i].events & EPOLLRDHUP) == EPOLLRDHUP) { //客户端关闭
+			if (stItem->enEventFlag != UDP_READ	|| stItem->enEventFlag != UDP_SEND) {
+				int iRet = m_pTcpNetHandler->HandleEvent(stItem->fd,TCP_SERVER_CLOSE);
+				if (0 != iRet) {
+					return iRet;
+				}
+			}
+		}
+		else if (stItem->fd == m_iSvrFd) {
 			int iRet = m_pTcpNetHandler->HandleEvent(m_iSvrFd, stItem->enEventFlag);
 			if (0 != iRet) {
 				return iRet;
@@ -575,7 +713,7 @@ int CReactor::ProcessEvent() {
 			}
 		}
 		else if (stItem->enEventFlag == UDP_READ) {
-			int iRet = m_pTcpNetHandler->HandleEvent(stItem->fd, stItem->enEventFlag);
+			int iRet = m_pUSockUdpHandler->HandleEvent(stItem->fd, stItem->enEventFlag);
 			if (0 != iRet ) {
 				return iRet;
 			}
@@ -587,7 +725,7 @@ int CReactor::ProcessEvent() {
 			}
 		}
 		else  {
-			printf("无效的请求应不处理丢弃\n");//socket事件不对
+			printf("无效的请求不处理-丢弃\n");//socket事件不对
 		}
 		/* 传统只根据Fd进行处理的办法，无法适应复杂的代码编写结构
 		 if (m_arrEpollEvents[i].data.fd == m_iSvrFd) {
@@ -611,8 +749,8 @@ int CReactor::ProcessEvent() {
 
 void CReactor::RunEventLoop() {
 	int iRet = 0;
-	AddToWatchList(m_iSvrFd, TCP_SERVER_ACCEPT); //将两大IO通道加入监听
-	AddToWatchList(m_iUSockFd, TCP_SERVER_ACCEPT);
+	AddToWatchList(m_iSvrFd, TCP_SERVER_ACCEPT, (void*)&m_arrTcpSock[m_iSvrFd], false); //将两大IO通道加入监听
+	AddToWatchList(m_iUSockFd, UDP_READ, (void*)&m_arrTcpSock[m_iUSockFd],false);
 	while (1) {
 		iRet = this->CheckEvents();
 		if (0 == iRet) { //没有任何东西要处理时，小小暂停一下

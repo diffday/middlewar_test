@@ -26,12 +26,16 @@ int CMsgQueue::GetMsg(MsgBuf_T *pBuf, int& dwBufLen) {
 	};
 	 */
 	iRet = msgrcv(m_iMsgQId, (struct msgbuf*) pBuf,	MAX_MSG_SIZE, pBuf->lType, IPC_NOWAIT);
-	if (iRet < 0) {
+	if (iRet < 0 && errno != ENOMSG) {
 		m_sLastErrMsg = strerror(errno);
 		return RECV_MSG_FAILED;
 	}
-
-	dwBufLen = iRet;
+	if (iRet < 0 && errno == ENOMSG) {
+		dwBufLen =  0;
+	}
+	else {
+		dwBufLen = iRet;
+	}
 
 	return 0;
 }
@@ -82,6 +86,7 @@ int CMsgQueue::PutMsg(const MsgBuf_T *pBuf, int dwBufLen) {
 		return MSG_TOO_LONG;
 	}
 	int iRet = 0;
+	//不含消息类型占用的4个字节,即mtext的长度
 	iRet = msgsnd(m_iMsgQId, (struct msgbuf*)pBuf, dwBufLen,IPC_NOWAIT);
 
 	if (iRet == -1) {

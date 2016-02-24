@@ -10,6 +10,7 @@
 #include <vector>
 #include <sys/epoll.h>
 #include <stdio.h>
+#include <netinet/in.h>
 #include "msgq_manager.h"
 using namespace std;
 
@@ -27,10 +28,10 @@ typedef enum {
 } EventFlag_t;
 
 //Epoll结构中传入的数据信息
-struct stEpollItem {
+struct stTcpSockItem {
 	int fd;
 	EventFlag_t enEventFlag;
-	void* pData;
+	sockaddr_in stSockAddr_in;
 
 	/*
 	stEpollItem(const stEpollItem& stOther) {
@@ -48,16 +49,14 @@ struct stEpollItem {
 		return *this;
 	}*/
 
-	stEpollItem() {
+	stTcpSockItem() {
 		fd=0;
 		enEventFlag = NONE_FLAG;
-		pData = NULL;
 	}
 
 	void Reset() {
 		fd=0;
 		enEventFlag = NONE_FLAG;
-		pData = NULL;
 	}
 };
 
@@ -152,7 +151,7 @@ protected:
 	int ProcessEvent();
 private:
 	//Epoll事件，加入或更新
-	int AddToWatchList(int iFd, EventFlag_t type, void* pData = NULL);
+	int AddToWatchList(int iFd, EventFlag_t type, void* pData = NULL,bool bCheckSock = true);
 	int RemoveFromWatchList(int iFd);
 	int InitTcpSvr(int iTcpSvrPort);
 	int InitUSockUdpSvr(const char* pszUSockPath);
@@ -176,7 +175,9 @@ private:
 	int m_iEvents;
 	int m_iEpollSucc;//每次Epoll_event的handle处理结果，用于在方法间传递信息
 
-	stEpollItem m_arrEpollItem[MAX_EPOLL_EVENT_NUM]; //用于epoll信息的保存
+	stTcpSockItem m_arrTcpSock[MAX_EPOLL_EVENT_NUM]; //用于epoll信息的保存
+	MsgBuf_T m_arrMsg[MAX_MSG_SIZE];
+	//stEpollItem m_MSG[MAX_EPOLL_EVENT_NUM];
 	//key_t iBackMsgKey;
 };
 

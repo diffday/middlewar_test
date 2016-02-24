@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <string>
+#include <cstring>
 #include "global_define.h"
 using namespace std;
 
@@ -26,6 +27,12 @@ typedef enum {
 typedef struct tagMsgBuf { //允许的默认值请提前用ipcs -l 查看上限
 	long lType;
 	char sBuf[MAX_MSG_SIZE - 8];
+
+	void Reset() {
+		lType = 0l;
+		memset((void*)sBuf,0,sizeof(sBuf));
+	}
+
 } MsgBuf_T;
 
 class CMsgQManager;
