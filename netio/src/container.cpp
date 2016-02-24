@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <stdlib.h>
+#include <sys/un.h>
 
 #include "string_helper.h"
 using namespace std;
@@ -85,6 +86,41 @@ int main(int argc, char** argv)
 		//父进程程序
 		oCMQManager.delMsgQueue(0xcccde);
 	}*/
+
+	int iSockfd = ::socket(PF_LOCAL, SOCK_DGRAM, 0);
+	printf("create fd:%d\n",iSockfd);
+	if(iSockfd < 0 )
+	{
+		printf("USockUDPSendTo-create socket failed\n");
+		continue;
+	}
+
+	char pSendBuf[2] = {'s','\0'};
+		    // Make Peer Addr
+	struct sockaddr_un stUNIXAddr;
+	memset(&stUNIXAddr, 0, sizeof(stUNIXAddr));
+	stUNIXAddr.sun_family = AF_LOCAL;
+		    //StrMov(stUNIXAddr.sun_path, pszSockPath); // "/tmp/pipe_channel.sock"
+	strncpy(stUNIXAddr.sun_path, NET_IO_USOCK_PATH, sizeof(stUNIXAddr.sun_path));
+
+		    // Send Buffer
+	int iBytesSent = ::sendto(
+		        iSockfd,
+				pSendBuf,
+		        1,
+		        0,
+		        (struct sockaddr *)&(stUNIXAddr),
+		        sizeof(struct sockaddr_un));
+
+	if(iBytesSent == -1 || static_cast<uint32_t>(iBytesSent) != 1)
+	{
+		printf("USockUDPSendTo-send notify failed\n");;
+
+	    return -1;
+	}
+
+	printf("close fd:%d,ret:%d\n",iSockfd,close(iSockfd)); //udp同样要关闭
+
 
 	}
 	return 0;
