@@ -272,7 +272,7 @@ int CUSockUdpHandler::DoRecv(int iConn) {
 	   //long l_uiHost = ntohl(m_l_stFromAddr.sin_addr.s_addr);
 
 	   long l_ushPort = ntohs(m_l_stFromAddr.sin_port);
-	   printf("info %s get from recv from %s:%d\n",buf,inet_ntoa(m_l_stFromAddr.sin_addr),l_ushPort,l_ushPort);
+	   printf("UDP-info %s get from recv from %s:%d\n",buf,inet_ntoa(m_l_stFromAddr.sin_addr),l_ushPort,l_ushPort);
 	return 0;
 }
 
