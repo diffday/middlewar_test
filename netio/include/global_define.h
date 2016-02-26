@@ -12,8 +12,28 @@
 #define MAX_QBYTES 1024* 100;
 
 #include <map>
+#include <string>
+#include   <stdio.h>
 using namespace std;
 
+class CCmd {
+	int ddwIndex;
+	int ddwSvcSerialNo;
+	int      iFd;
+	int      iCmd;
+	int ifamily;
+	std::string sClientIp;
+	short    sPort;
+	std::string sData;
+
+	int ToString(char* pBuf, int iLen) {
+		return snprintf(pBuf,iLen,"cmd=%d&fd=%d&family=%d&cliIp=%s&cliPort=%d&%s",iCmd,iFd,ifamily,sClientIp.c_str(),sPort,sData.c_str());
+	}
+	/*
+	std::string ToString() {
+
+	}*/
+};
 
 enum errcode {
 	CREATE_MSGQ_FAILED = 1,
