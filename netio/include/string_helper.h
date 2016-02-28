@@ -48,6 +48,9 @@ inline std::string Trim(const std::string &s)
 	return string(s, iBeg, iEnd - iBeg + 1);
 }
 
+/**
+ * 出现重复key的参数，结合stl map insert的特性，将以第一个添加进去的值为准。
+ */
 inline void strPairAppendToMap(const std::string & sSrc,std::map<std::string,std::string> & mpStr)
 {
 	vector<string> vStr;
