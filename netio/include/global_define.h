@@ -12,41 +12,8 @@
 #define MAX_QBYTES 1024* 100;
 
 #include <map>
-#include <string>
-#include   <stdio.h>
-#include <sstream>
+
 using namespace std;
-
-class CCmd {
-public:
-	int iIndex; //IO进程的内部标示，当前版本没用到
-	int iSvcSerialNo;//SVC进程的内部表示，用以状态性的指派恢复
-	int      iFd;
-	int      iCmd;
-	int ifamily;
-	std::string sClientIp;
-	short    sPort;
-	std::string sData;
-
-	int ToString(char* pBuf, int iLen) {
-		return snprintf(pBuf,iLen,"index=%d&serialno=%d&cmd=%d&fd=%d&family=%d&cliIp=%s&cliPort=%d&%s",iIndex,iSvcSerialNo,iCmd,iFd,ifamily,sClientIp.c_str(),sPort,sData.c_str());
-	}
-
-	std::string ToString() {
-		stringstream ss;
-		ss<<"index="<<iIndex;
-		ss<<"&serialno="<<iSvcSerialNo;
-		ss<<"&cmd="<<iCmd;
-		ss<<"&fd="<<iFd;
-		ss<<"&family="<<ifamily;
-		ss<<"&cliIp="<<sClientIp;
-		ss<<"&cliPort="<<sPort;
-		ss<<"&"<<sData;
-
-		return string(ss.str());
-
-	}
-};
 
 enum errcode {
 	CREATE_MSGQ_FAILED = 1,

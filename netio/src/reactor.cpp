@@ -19,6 +19,7 @@
 #include "global_define.h"
 #include "assert.h"
 #include "string_helper.h"
+#include "cmd_obj.h"
 
 
 int CContainerEventHandler::CheckEvent(void* pvParam) {
@@ -185,6 +186,14 @@ int CTcpNetHandler::DoRecv(int iConn) {
 	}
 
 	assert(dwCmd);
+
+	CCmd oCmd;
+	oCmd.InitCCmd(buf);
+	oCmd.iFd=iConn;
+	oCmd.ifamily=m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_family;
+	oCmd.sClientIp=inet_ntoa(m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_addr);
+	oCmd.iPort=m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_port;
+	//printf("dump cmdobj:%s\n",oCmd.ToString().c_str());
 	/*
 	iRet = m_pMQManager->GetMsgQueue(NET_IO_BACK_MSQ_KEY, rpMsgq);
 	assert(iRet == 0);*/
@@ -193,7 +202,11 @@ int CTcpNetHandler::DoRecv(int iConn) {
 	MsgBuf_T stMsg;
 	stMsg.lType=REQUEST;
 
-	snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+100,"fd=%d&family=%d&cliIp=%s&cliPort=%d&%s",iConn,m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_family,inet_ntoa(m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_addr),m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_port,buf);
+
+	oCmd.ToString(stMsg.sBuf,sizeof(stMsg.sBuf));
+
+	//snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+100,"fd=%d&family=%d&cliIp=%s&cliPort=%d&%s",iConn,m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_family,inet_ntoa(m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_addr),m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_port,buf);
+
 
 	iRet = rpMsgq->PutMsg(&stMsg,strlen(stMsg.sBuf));
 	if (0 != iRet) {
