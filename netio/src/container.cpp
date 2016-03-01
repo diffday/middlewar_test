@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <sys/un.h>
+#include "cmd_obj.h"
 
 #include "string_helper.h"
 using namespace std;
@@ -40,29 +41,35 @@ int main(int argc, char** argv)
 
 	if (Len == 0) {
 		struct timeval tv;
-					tv.tv_sec = 0;
-					tv.tv_usec = 10;
+		tv.tv_sec = 0;
+		tv.tv_usec = 10;
 
-					select(0,NULL,NULL,NULL,&tv); //纯纯的sleep
+		select(0,NULL,NULL,NULL,&tv); //纯纯的sleep
 		continue;
 	}
 	else {
 		printf("get Msg lenth:%d,data is %s\n",Len,stMsg.sBuf);
 	}
+	CCmd oCmd;
+	oCmd.InitCCmd(stMsg.sBuf);
+
+	/*
 	map<string,string> mapPara;
 	strPairAppendToMap(stMsg.sBuf,mapPara);
 	int ifd = static_cast<int>(atoll(mapPara.find("fd")->second.c_str()));
 	string clientIp = mapPara.find("cliIp")->second;
 	int family = atoi(mapPara.find("family")->second.c_str());
-	int port = atoi(mapPara.find("cliPort")->second.c_str());
+	int port = atoi(mapPara.find("cliPort")->second.c_str());*/
 
 
 	oCMQManager.GetMsgQueue(NET_IO_BACK_MSQ_KEY,rpMsgq);
 	MsgBuf_T stMsg2;
 	stMsg.Reset();
 	stMsg2.lType = RESPONSE;
-	string strResponse = "This is the response";
-	snprintf(stMsg2.sBuf,strResponse.length()+100,"fd=%d&family=%d&cliIp=%s&cliPort=%d&resp=%s",ifd, family,clientIp.c_str(), port, strResponse.c_str());
+	oCmd.sData = "resp=This is the response";
+	//string strResponse = "This is the response";
+	oCmd.ToString(stMsg2.sBuf,sizeof(stMsg2.sBuf));
+	//snprintf(stMsg2.sBuf,strResponse.length()+100,"fd=%d&family=%d&cliIp=%s&cliPort=%d&resp=%s",ifd, family,clientIp.c_str(), port, strResponse.c_str());
 	rpMsgq->PutMsg(&stMsg2,strlen(stMsg2.sBuf));
 
 	/*

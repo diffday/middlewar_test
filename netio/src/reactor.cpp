@@ -50,15 +50,25 @@ int CNetIOUserEventHandler::OnEventFire(void* pvParam) {
 		return 0;
 	}
 
-	printf("get Msg lenth:%d,data is %s,error:%s\n",Len,stMsg.sBuf,rpMsgq->m_sLastErrMsg.c_str());
-
+	printf("get svc Msg lenth:%d,data is %s,error:%s\n",Len,stMsg.sBuf,rpMsgq->m_sLastErrMsg.c_str());
+	CCmd oCmd;
+	printf("the cmd to string is:%s\n",oCmd.ToString().c_str());
+	oCmd.InitCCmd(stMsg.sBuf);
+	snprintf(stMsg.sBuf,sizeof(stMsg.sBuf),"%s",oCmd.sData.c_str());
+	/*
 	map<string,string> mapPara;
 	strPairAppendToMap(stMsg.sBuf,mapPara);
 	int ifd = static_cast<int>(atoll(mapPara.find("fd")->second.c_str()));
-	snprintf(stMsg.sBuf,sizeof(stMsg.sBuf),"%s",mapPara.find("resp")->second.c_str());
-	m_pReactor->m_arrMsg[ifd] = stMsg;
+	snprintf(stMsg.sBuf,sizeof(stMsg.sBuf),"%s",mapPara.find("resp")->second.c_str());*/
+	m_pReactor->m_arrMsg[oCmd.iFd] = stMsg;
 
 	stTcpSockItem stSock;
+	stSock.fd = oCmd.iFd;
+	stSock.enEventFlag = TCP_SERVER_SEND;
+	stSock.stSockAddr_in.sin_port = oCmd.iPort;
+	stSock.stSockAddr_in.sin_addr.s_addr = inet_addr(oCmd.sClientIp.c_str());
+	stSock.stSockAddr_in.sin_family = oCmd.ifamily;
+	/*
 	stSock.fd = ifd;
 	stSock.enEventFlag = TCP_SERVER_SEND;
 	string clientIp = mapPara.find("cliIp")->second;
@@ -66,10 +76,10 @@ int CNetIOUserEventHandler::OnEventFire(void* pvParam) {
 	int port = atoi(mapPara.find("cliPort")->second.c_str());
 	stSock.stSockAddr_in.sin_port = port;
 	stSock.stSockAddr_in.sin_addr.s_addr = inet_addr(clientIp.c_str());
-	stSock.stSockAddr_in.sin_family = family;
+	stSock.stSockAddr_in.sin_family = family;*/
 
-	m_pReactor->AddToWatchList(ifd,TCP_SERVER_SEND,&stSock);
-		//snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+1,"%s",buf);
+	m_pReactor->AddToWatchList(oCmd.iFd,TCP_SERVER_SEND,&stSock);
+	//snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+1,"%s",buf);
 
 	return 0;
 }
@@ -166,6 +176,22 @@ int CTcpNetHandler::DoRecv(int iConn) {
 	for (;it!=mapPara.end();++it){
 		printf("%s=%s\n",(it->first).c_str(),(it->second).c_str());
 	}*/
+
+	CCmd oCmd;
+	oCmd.InitCCmd(buf);
+	assert(oCmd.iCmd);
+	int iIndex = oCmd.iCmd % g_mapCmdDLL.size();
+	int iCount = 0;
+	for (std::map<int, const char*>::const_iterator it=g_mapCmdDLL.begin();it!=g_mapCmdDLL.end();++it) {
+		if (iIndex == iCount) {
+			iRet = m_pMQManager->GetMsgQueue(it->first, rpMsgq);
+			printf("cmd %d will put request into MSGQ %x\n",oCmd.iCmd,it->first);
+			assert(iRet == 0);
+			break;
+		}
+		++iCount;
+	}
+	/*
 	uint32_t dwCmd=0;
 	map<string,string> mapPara;
 	strPairAppendToMap(buf,mapPara);
@@ -185,10 +211,10 @@ int CTcpNetHandler::DoRecv(int iConn) {
 		}
 	}
 
-	assert(dwCmd);
+	assert(dwCmd);*/
 
-	CCmd oCmd;
-	oCmd.InitCCmd(buf);
+	//CCmd oCmd;
+	//oCmd.InitCCmd(buf);
 	oCmd.iFd=iConn;
 	oCmd.ifamily=m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_family;
 	oCmd.sClientIp=inet_ntoa(m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_addr);
@@ -201,7 +227,6 @@ int CTcpNetHandler::DoRecv(int iConn) {
 
 	MsgBuf_T stMsg;
 	stMsg.lType=REQUEST;
-
 
 	oCmd.ToString(stMsg.sBuf,sizeof(stMsg.sBuf));
 
