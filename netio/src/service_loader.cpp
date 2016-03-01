@@ -4,16 +4,19 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <iostream>
+#include "intf_service.h"
 CServiceLoader::CServiceLoader(){}
 CServiceLoader::~CServiceLoader(){
 	CleanServices();
 }
 
+typedef IServiceFactory* (*pfnSvcInitFunction_T)(void);
+const char* SVC_INIT_FUNC = "InitSvrObjFactory";
 
 int CServiceLoader::LoadServices(){
 	map<int,const char*>::const_iterator it = g_mapCmdDLL.begin();
 	for (;it!=g_mapCmdDLL.end();++it) {
-		printf("load dll %s\n",it->second);
+		printf("start load dll %s\n",it->second);
 		LoadSercie_i(it->first,it->second);
 	}
 
@@ -30,7 +33,16 @@ int CServiceLoader::LoadSercie_i(int iCmdId,const char* pszDLLName) {
 		printf("load dll %s succ!\n",pszDLLName);
 	}
 
+	pfnSvcInitFunction_T pfnSvcInitFunction = (pfnSvcInitFunction_T)dlsym(pHandle, SVC_INIT_FUNC); //函数指针
+	if (dlerror() != NULL) {
+		printf("dlsym (%s) Error,dll %s msg: %s\n",SVC_INIT_FUNC,pszDLLName,dlerror());
+		return OPEN_DLL_FAILED;
+	}
+	IServiceFactory* pSvcFactory = (*pfnSvcInitFunction)();
+	//pSvcFactory->Create();
+
 	m_mapHandlers[iCmdId] = pHandle;
+	m_mapServiceFactory[iCmdId] = pSvcFactory;
 }
 
 int CServiceLoader::CleanServices() {

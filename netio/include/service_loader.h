@@ -9,6 +9,7 @@
 #define NETIO_INCLUDE_SERVICE_LOADER_H_
 #include <map>
 #include <string>
+#include "intf_service.h"
 using namespace std;
 
 class CServiceLoader {
@@ -25,6 +26,7 @@ private:
 
 private:
 	map<int,void*> m_mapHandlers; //每个命令字对应的DLL的打开句柄
+	map<int,IServiceFactory*> m_mapServiceFactory;
 };
 
 

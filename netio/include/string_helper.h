@@ -8,7 +8,10 @@
 #ifndef NETIO_INCLUDE_STRING_HELPER_H_
 #define NETIO_INCLUDE_STRING_HELPER_H_
 
-
+#include <vector>
+#include <string>
+#include <map>
+using namespace std;
 inline void SplitString(const std::string& sSrc, std::string::value_type cSep, std::vector<std::string>& vecString)
 {
     vecString.clear();

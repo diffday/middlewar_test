@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <sstream>
 #include "string_helper.h"
+#include <stdlib.h>
 
 class CCmd {
 public:
@@ -49,38 +50,38 @@ public:
 		map<string,string> mapPara;
 		strPairAppendToMap(pBuf,mapPara);
 		if (mapPara.find("cmd") != mapPara.end()) {
-			int iData = static_cast<uint32_t>(atoll(mapPara.find("cmd")->second.c_str()));
+			int iData = static_cast<int>(atoll(mapPara.find("cmd")->second.c_str()));
 			iCmd = iData;
 			mapPara.erase(mapPara.find("cmd"));
 		}
 
 		if (mapPara.find("fd") != mapPara.end()) {
-			int iData = static_cast<uint32_t>(atoll(mapPara.find("fd")->second.c_str()));
+			int iData = static_cast<int>(atoll(mapPara.find("fd")->second.c_str()));
 			iFd = iData;
 			mapPara.erase(mapPara.find("fd"));
 		}
 
 		if (mapPara.find("index") != mapPara.end()) {
-			int iData = static_cast<uint32_t>(atoll(mapPara.find("index")->second.c_str()));
+			int iData = static_cast<int>(atoll(mapPara.find("index")->second.c_str()));
 			iIndex = iData;
 			mapPara.erase(mapPara.find("index"));
 		}
 
 
 		if (mapPara.find("serialno") != mapPara.end()) {
-			int iData = static_cast<uint32_t>(atoll(mapPara.find("serialno")->second.c_str()));
+			int iData = static_cast<int>(atoll(mapPara.find("serialno")->second.c_str()));
 			iSvcSerialNo = iData;
 			mapPara.erase(mapPara.find("serialno"));
 		}
 
 		if (mapPara.find("family") != mapPara.end()) {
-			int iData = static_cast<uint32_t>(atoll(mapPara.find("family")->second.c_str()));
+			int iData = static_cast<int>(atoll(mapPara.find("family")->second.c_str()));
 			ifamily = iData;
 			mapPara.erase(mapPara.find("family"));
 		}
 
 		if (mapPara.find("cliPort") != mapPara.end()) {
-			int iData = static_cast<uint32_t>(atoll(mapPara.find("cliPort")->second.c_str()));
+			int iData = static_cast<int>(atoll(mapPara.find("cliPort")->second.c_str()));
 			iPort = iData;
 			mapPara.erase(mapPara.find("cliPort"));
 		}

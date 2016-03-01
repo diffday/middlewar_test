@@ -7,12 +7,12 @@
 
 #ifndef NETIO_INCLUDE_SVC_BASE_H_
 #define NETIO_INCLUDE_SVC_BASE_H_
-
+#include "intf_service.h"
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-	IService* InitSvrObj(void);
+	IServiceFactory* InitSvrObjFactory(void);
 #ifdef __cplusplus
 }
 #endif
