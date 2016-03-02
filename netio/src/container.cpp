@@ -11,19 +11,46 @@
 #include "string_helper.h"
 using namespace std;
 
+void printUsuage () {
+	printf("must input the index para\n");
+	printf("usuage:./container index(0|1)\n");
+}
+
 int main(int argc, char** argv)
 {
+	if (argc < 2) {
+		printUsuage();
+		return 0;
+	}
+	int inputIndex = atoi(argv[1]);
+	if (inputIndex != 0 && inputIndex != 1) {
+		printUsuage();
+		return 0;
+	}
+
 	CMsgQManager oCMQManager;
 	oCMQManager.AddMsgQueue(NET_IO_BACK_MSQ_KEY);
 
+	int iIndex = 0;
+	CServiceLoader oServiceLoader;
 	map<int,const char*>::const_iterator it =g_mapCmdDLL.begin();
 	for (;it!=g_mapCmdDLL.end();++it) {
-		oCMQManager.AddMsgQueue(it->first);
+		if (iIndex == inputIndex) {
+			oCMQManager.AddMsgQueue(it->first);
+			oServiceLoader.LoadSercie_i(it->first,it->second);
+		}
 	}
 
-	CServiceLoader oServiceLoader;
-	oServiceLoader.LoadServices();
+
+	//oServiceLoader.LoadServices();
 	oServiceLoader.CleanServices();
+/*
+	CReactor oReactor;
+	int iRet = oReactor.Init(0, NULL);
+
+	CContainerEventHandler* oContainerEventHandler = new CContainerEventHandler;
+	oContainerEventHandler->RegisterMqManager(&oCMQManager,0xcccce);*/
+
 
 	int count=0;
 	while (count<1000000) {
@@ -52,13 +79,14 @@ int main(int argc, char** argv)
 	CCmd oCmd;
 	oCmd.InitCCmd(stMsg.sBuf);
 
-	/*
+
 	map<string,string> mapPara;
 	strPairAppendToMap(stMsg.sBuf,mapPara);
 	int ifd = static_cast<int>(atoll(mapPara.find("fd")->second.c_str()));
 	string clientIp = mapPara.find("cliIp")->second;
 	int family = atoi(mapPara.find("family")->second.c_str());
-	int port = atoi(mapPara.find("cliPort")->second.c_str());*/
+	int port = atoi(mapPara.find("cliPort")->second.c_str());
+
 
 
 	oCMQManager.GetMsgQueue(NET_IO_BACK_MSQ_KEY,rpMsgq);
@@ -92,6 +120,7 @@ int main(int argc, char** argv)
 		//父进程程序
 		oCMQManager.delMsgQueue(0xcccde);
 	}*/
+
 
 	int iSockfd = ::socket(PF_LOCAL, SOCK_DGRAM, 0);
 	printf("create fd:%d\n",iSockfd);

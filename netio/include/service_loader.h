@@ -21,7 +21,6 @@ public:
 	int LoadServices();
 	int CleanServices();
 
-private:
 	int LoadSercie_i(int iCmdId,const char* pszDLLName);
 
 private:
