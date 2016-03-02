@@ -58,7 +58,7 @@ int CContainerEventHandler::RespNotify() {
 }
 
 int CContainerEventHandler::OnEventFire(void* pvParam) {
-
+	printf("CContainerEventHandler::OnEventFire come in \n");
 	CMsgQueue* rpMsgq;
 	m_pMQManager->GetMsgQueue(m_iMqKey,rpMsgq);
 
@@ -771,31 +771,42 @@ int  CReactor::RemoveFromWatchList(int iFd) {
 
 	return 0;
 }
-
+/**
+ * 当前的实现是用户事件handler回调函数一定会触发进入，socket是依赖于事件的。返回0表示总体无事要做。
+ */
 int CReactor::CheckEvents() {
-	if (m_pUserEventHandler) {
-		int iRet = m_pUserEventHandler->CheckEvent();
-
-		if (iRet != 0) {
-			printf("error happed when checkUserEvent %d\n",iRet);
-		}
-	}
 
 	if (m_iEvents > 0) {//进程间通信也放入监听。当container有数据返回到来时，可发数据包及时唤醒
 		m_iEpollSucc = epoll_wait(m_iEpFd, m_arrEpollEvents, m_iEvents, DEFAULT_EPOLL_WAIT_TIME); //超时时间单位是毫秒
 		//printf("event count %d\n",m_iEpollSucc);
 		if (m_iEpollSucc < 0) { //出错的时候返回-1，可通过errno查看具体错误.否则返回可处理的IO个数
-			return EPOLL_WAIT_FAILED;
+			printf("event wait failed %d\n",m_iEpollSucc);
+			m_iEpollSucc = 0;;
 		}
 		else if (m_iEpollSucc > 0){
 			printf("event count %d\n",m_iEpollSucc);
 		}
+
+		return m_iEpollSucc;
 	}
 	else {
-		printf("nothing to do,m_nEvent:%d\n",m_iEvents);
+		printf("nothing to do socket event,m_nEvent:%d\n",m_iEvents);
 	}
 
-	return m_iEvents | 1;
+	if (m_pUserEventHandler) {
+		int iRet = m_pUserEventHandler->CheckEvent();
+
+		if (iRet != 0) {
+			printf("error happed when checkUserEvent %d\n",iRet);
+			return 0;
+		}
+
+		return iRet;
+	}
+
+	//return m_iEvents | 1;
+
+	return 0;
 }
 
 int CReactor::ProcessEvent() {
