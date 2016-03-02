@@ -68,6 +68,12 @@ int CContainerEventHandler::OnEventFire(void* pvParam) {
 
 	int Len = 0;
 	int iret = rpMsgq->GetMsg(&stMsg,Len);
+	if (Len == 0) {
+		return 0;
+	}
+	else {
+		printf("get Msg lenth:%d,data is %s\n",Len,stMsg.sBuf);
+	}
 	CCmd oCmd;
 	oCmd.InitCCmd(stMsg.sBuf);
 
