@@ -879,8 +879,12 @@ int CReactor::ProcessEvent() {
 
 void CReactor::RunEventLoop() {
 	int iRet = 0;
-	AddToWatchList(m_iSvrFd, TCP_SERVER_ACCEPT, (void*)&m_arrTcpSock[m_iSvrFd], false); //将两大IO通道加入监听
-	AddToWatchList(m_iUSockFd, UDP_READ, (void*)&m_arrTcpSock[m_iUSockFd],false);
+	if (m_iSvrFd) {
+		AddToWatchList(m_iSvrFd, TCP_SERVER_ACCEPT, (void*)&m_arrTcpSock[m_iSvrFd], false); //将两大IO通道加入监听
+	}
+	if (m_iUSockFd) {
+		AddToWatchList(m_iUSockFd, UDP_READ, (void*)&m_arrTcpSock[m_iUSockFd],false);
+	}
 	while (1) {
 		iRet = this->CheckEvents();
 		if (0 == iRet) { //没有任何东西要处理时，小小暂停一下

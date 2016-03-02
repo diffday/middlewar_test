@@ -51,7 +51,7 @@ int main(int argc, char** argv)
 			}
 
 			CContainerEventHandler* pContainerEventHandler = new CContainerEventHandler;
-			pContainerEventHandler->RegisterMqManager(&oCMQManager,it->first);
+			pContainerEventHandler->RegisterMqInfo(&oCMQManager,it->first);
 			pContainerEventHandler->RegisterSvcDispatcher(1,&oServiceDispatcher);
 			oReactor.RegisterUserEventHandler(pContainerEventHandler);
 		}
