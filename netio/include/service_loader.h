@@ -22,6 +22,7 @@ public:
 	int CleanServices();
 
 	int LoadSercie_i(int iCmdId,const char* pszDLLName);
+	int GetServiceFactory(int iCmdId, IServiceFactory*& pIServiceFactory);
 
 private:
 	map<int,void*> m_mapHandlers; //每个命令字对应的DLL的打开句柄

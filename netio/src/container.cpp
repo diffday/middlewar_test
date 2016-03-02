@@ -30,26 +30,39 @@ int main(int argc, char** argv)
 
 	CMsgQManager oCMQManager;
 	oCMQManager.AddMsgQueue(NET_IO_BACK_MSQ_KEY);
+	CReactor oReactor;
+	int iRet = oReactor.Init(0, NULL);
 
 	int iIndex = 0;
 	CServiceLoader oServiceLoader;
+	CServiceDispatcher oServiceDispatcher;
 	map<int,const char*>::const_iterator it =g_mapCmdDLL.begin();
 	for (;it!=g_mapCmdDLL.end();++it) {
 		if (iIndex == inputIndex) {
 			oCMQManager.AddMsgQueue(it->first);
 			oServiceLoader.LoadSercie_i(it->first,it->second);
+			IServiceFactory* pIServiceFactory;
+			iRet = oServiceLoader.GetServiceFactory(it->first, pIServiceFactory);
+			assert(iRet == 0);
+			for (int i=0;i<100;++i) {
+				IService* pSvc = pIServiceFactory->Create();
+				oServiceDispatcher.AddSvcHandler(pSvc);
+			}
+
+			CContainerEventHandler* oContainerEventHandler = new CContainerEventHandler;
+			oContainerEventHandler->RegisterMqManager(&oCMQManager,it->first);
+			oContainerEventHandler->RegisterSvcDispatcher(1,oServiceDispatcher);
+			oReactor.RegisterUserEventHandler(CContainerEventHandler);
 		}
+		++iIndex;
 	}
+	oReactor.RunEventLoop();
+
+	return 0;
 
 
-	//oServiceLoader.LoadServices();
-	oServiceLoader.CleanServices();
-/*
-	CReactor oReactor;
-	int iRet = oReactor.Init(0, NULL);
-
-	CContainerEventHandler* oContainerEventHandler = new CContainerEventHandler;
-	oContainerEventHandler->RegisterMqManager(&oCMQManager,0xcccce);*/
+	//oServiceLoader.LoadServices(); //此行完全可删
+	//oServiceLoader.CleanServices();
 
 
 	int count=0;

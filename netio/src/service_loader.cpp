@@ -53,3 +53,12 @@ int CServiceLoader::CleanServices() {
 	}
 	m_mapHandlers.clear();
 }
+
+int CServiceLoader::GetServiceFactory(int iCmdId, IServiceFactory*& pIServiceFactory) {
+	map<int,IServiceFactory*>::iterator it = m_mapServiceFactory.find(iCmdId);
+	if (it != m_mapServiceFactory.end()) {
+		pIServiceFactory = it->second;
+		return 0;
+	}
+	return -1;
+}
