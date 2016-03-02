@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <sys/un.h>
 #include "cmd_obj.h"
+#include "assert.h"
 
 #include "string_helper.h"
 using namespace std;
@@ -49,10 +50,10 @@ int main(int argc, char** argv)
 				oServiceDispatcher.AddSvcHandler(pSvc);
 			}
 
-			CContainerEventHandler* oContainerEventHandler = new CContainerEventHandler;
-			oContainerEventHandler->RegisterMqManager(&oCMQManager,it->first);
-			oContainerEventHandler->RegisterSvcDispatcher(1,oServiceDispatcher);
-			oReactor.RegisterUserEventHandler(CContainerEventHandler);
+			CContainerEventHandler* pContainerEventHandler = new CContainerEventHandler;
+			pContainerEventHandler->RegisterMqManager(&oCMQManager,it->first);
+			pContainerEventHandler->RegisterSvcDispatcher(1,&oServiceDispatcher);
+			oReactor.RegisterUserEventHandler(pContainerEventHandler);
 		}
 		++iIndex;
 	}
