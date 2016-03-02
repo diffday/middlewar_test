@@ -58,7 +58,7 @@ int CContainerEventHandler::RespNotify() {
 }
 
 int CContainerEventHandler::OnEventFire(void* pvParam) {
-	printf("CContainerEventHandler::OnEventFire come in \n");
+	//printf("CContainerEventHandler::OnEventFire come in \n");
 	CMsgQueue* rpMsgq;
 	m_pMQManager->GetMsgQueue(m_iMqKey,rpMsgq);
 
@@ -100,8 +100,8 @@ int CContainerEventHandler::OnEventFire(void* pvParam) {
 }
 
 
-int CContainerEventHandler::RegisterMqInfo(CMsgQManager* m_pMQManager, key_t iMqKey) {
-	m_pMQManager = m_pMQManager;
+int CContainerEventHandler::RegisterMqInfo(CMsgQManager* pMQManager, key_t iMqKey) {
+	m_pMQManager = pMQManager;
 	m_iMqKey = iMqKey;
 }
 
@@ -796,7 +796,7 @@ int CReactor::CheckEvents() {
 		return m_iEpollSucc;
 	}
 	else {
-		printf("nothing to do socket event,m_nEvent:%d\n",m_iEvents);
+		//printf("nothing to do socket event,m_nEvent:%d\n",m_iEvents);
 	}
 
 	if (m_pUserEventHandler) {

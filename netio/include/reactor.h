@@ -76,7 +76,7 @@ public:
 	CMsgQManager* m_pMQManager;
 	key_t m_iMqKey;
 	map<int,CServiceDispatcher*> m_mapPSvcDispatcher;
-	int RegisterMqInfo(CMsgQManager* m_pMQManager, key_t iMqKey);
+	int RegisterMqInfo(CMsgQManager* pMQManager, key_t iMqKey);
 	int RegisterSvcDispatcher(int iCmd,CServiceDispatcher* pSvcDispatcher);
 	int RespNotify();
 	~CContainerEventHandler(){};
