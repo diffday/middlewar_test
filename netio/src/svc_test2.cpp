@@ -29,6 +29,7 @@ class CSvcTest2Factory : public IServiceFactory{
 
 int CSvcTest2::Execute(CCmd& oCmd) {
 	printf("CSvcTest2::Execute\n");
+	return 0;
 }
 
 

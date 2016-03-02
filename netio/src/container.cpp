@@ -65,7 +65,7 @@ int main(int argc, char** argv)
 	//oServiceLoader.LoadServices(); //此行完全可删
 	//oServiceLoader.CleanServices();
 
-
+/*
 	int count=0;
 	while (count<1000000) {
 
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
 	//string strResponse = "This is the response";
 	oCmd.ToString(stMsg2.sBuf,sizeof(stMsg2.sBuf));
 	//snprintf(stMsg2.sBuf,strResponse.length()+100,"fd=%d&family=%d&cliIp=%s&cliPort=%d&resp=%s",ifd, family,clientIp.c_str(), port, strResponse.c_str());
-	rpMsgq->PutMsg(&stMsg2,strlen(stMsg2.sBuf));
+	rpMsgq->PutMsg(&stMsg2,strlen(stMsg2.sBuf));*/
 
 	/*
 	struct sockaddr_in addr;
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
 		oCMQManager.delMsgQueue(0xcccde);
 	}*/
 
-
+/*
 	int iSockfd = ::socket(PF_LOCAL, SOCK_DGRAM, 0);
 	printf("create fd:%d\n",iSockfd);
 	if(iSockfd < 0 )
@@ -171,7 +171,7 @@ int main(int argc, char** argv)
 	printf("close fd:%d,ret:%d\n",iSockfd,close(iSockfd)); //udp同样要关闭
 
 
-	}
+	}*/
 	return 0;
 
 }
