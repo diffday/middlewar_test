@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <netinet/in.h>
 #include "msgq_manager.h"
+#include "service_dispatcher.h"
 using namespace std;
 
 class CReactor;
@@ -74,7 +75,10 @@ public:
 	int CheckEvent(void* pvParam= 0);
 	CMsgQManager* m_pMQManager;
 	key_t m_iMqKey;
+	map<int,CServiceDispatcher*> m_mapPSvcDispatcher;
 	int RegisterMqInfo(CMsgQManager* m_pMQManager, key_t iMqKey);
+	int RegisterSvcDispatcher(int iCmd,CServiceDispatcher* pSvcDispatcher);
+	int RespNotify();
 	~CContainerEventHandler(){};
 };
 

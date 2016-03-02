@@ -23,17 +23,19 @@ public:
 	std::string sClientIp;
 	int    iPort;
 	std::string sData;
+	int iRet;
 
 	//返回格式化后的长度，iLen为buf的总长度
 	int ToString(char* pBuf, int iLen) {
-		return snprintf(pBuf,iLen,"index=%d&serialno=%d&cmd=%d&fd=%d&family=%d&cliIp=%s&cliPort=%d&%s",iIndex,iSvcSerialNo,iCmd,iFd,ifamily,sClientIp.c_str(),iPort,sData.c_str());
+		return snprintf(pBuf,iLen,"ret=%d&index=%d&serialno=%d&cmd=%d&fd=%d&family=%d&cliIp=%s&cliPort=%d&%s",iRet, iIndex,iSvcSerialNo,iCmd,iFd,ifamily,sClientIp.c_str(),iPort,sData.c_str());
 	}
 
-	CCmd():iIndex(0), iSvcSerialNo(0), iFd(0),iCmd(0),ifamily(0),iPort(0){}
+	CCmd():iIndex(0), iSvcSerialNo(0), iFd(0),iCmd(0),ifamily(0),iPort(0),iRet(0){}
 
 	std::string ToString() {
 		stringstream ss;
-		ss<<"index="<<iIndex;
+		ss<<"ret="<<iRet;
+		ss<<"&index="<<iIndex;
 		ss<<"&serialno="<<iSvcSerialNo;
 		ss<<"&cmd="<<iCmd;
 		ss<<"&fd="<<iFd;
@@ -49,6 +51,13 @@ public:
 	int InitCCmd(char* pBuf) { //返回值可以用于区分是否字段齐全，demo实现就不搞那么严谨了
 		map<string,string> mapPara;
 		strPairAppendToMap(pBuf,mapPara);
+
+		if (mapPara.find("ret") != mapPara.end()) {
+			int iData = static_cast<int>(atoll(mapPara.find("ret")->second.c_str()));
+			iRet = iData;
+			mapPara.erase(mapPara.find("ret"));
+		}
+
 		if (mapPara.find("cmd") != mapPara.end()) {
 			int iData = static_cast<int>(atoll(mapPara.find("cmd")->second.c_str()));
 			iCmd = iData;

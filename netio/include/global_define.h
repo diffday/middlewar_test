@@ -35,6 +35,7 @@ enum errcode {
 	SET_USOCKOPT_FAILED,
 	BIND_USOCKET_FAILED,
 	FCNTL_USOCKET_FAILED,
+	NO_FREE_SVC_HANDLER,
 };
 
 static const int NET_IO_BACK_MSQ_KEY = 0xccccc;

@@ -11,7 +11,6 @@
 #include "string_helper.h"
 using namespace std;
 
-
 int main(int argc, char** argv)
 {
 	CMsgQManager oCMQManager;

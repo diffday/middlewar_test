@@ -26,10 +26,82 @@ int CContainerEventHandler::CheckEvent(void* pvParam) {
 	return 0;
 }
 
-int CContainerEventHandler::OnEventFire(void* pvParam) {
+
+int CContainerEventHandler::RespNotify() {
+	int iSockfd = ::socket(PF_LOCAL, SOCK_DGRAM, 0);
+	printf("create fd:%d\n", iSockfd);
+	if (iSockfd < 0) {
+		printf("USockUDPSendTo-create socket failed\n");
+		return -1;
+	}
+
+	char pSendBuf[2] = { 's', '\0' };
+	// Make Peer Addr
+	struct sockaddr_un stUNIXAddr;
+	memset(&stUNIXAddr, 0, sizeof(stUNIXAddr));
+	stUNIXAddr.sun_family = AF_LOCAL;
+	//StrMov(stUNIXAddr.sun_path, pszSockPath); // "/tmp/pipe_channel.sock"
+	strncpy(stUNIXAddr.sun_path, NET_IO_USOCK_PATH,	sizeof(stUNIXAddr.sun_path));
+
+	// Send Buffer
+	int iBytesSent = ::sendto(iSockfd, pSendBuf, 1, 0, (struct sockaddr *) &(stUNIXAddr), sizeof(struct sockaddr_un));
+
+	if (iBytesSent == -1 || static_cast<uint32_t>(iBytesSent) != 1) {
+		printf("USockUDPSendTo-send notify failed\n");
+
+		return -2;
+	}
+
+	printf("close fd:%d,ret:%d\n", iSockfd, close(iSockfd)); //udp同样要关闭
+
 	return 0;
 }
 
+int CContainerEventHandler::OnEventFire(void* pvParam) {
+
+	CMsgQueue* rpMsgq;
+	m_pMQManager->GetMsgQueue(m_iMqKey,rpMsgq);
+
+	MsgBuf_T stMsg;
+	stMsg.Reset();
+	stMsg.lType = REQUEST;
+
+	int Len = 0;
+	int iret = rpMsgq->GetMsg(&stMsg,Len);
+	CCmd oCmd;
+	oCmd.InitCCmd(stMsg.sBuf);
+
+	map<int,CServiceDispatcher*>::iterator it = m_mapPSvcDispatcher.find(oCmd.iCmd);
+	if (it != m_mapPSvcDispatcher.end()) {
+		int iRet = it->second->Dispatch(oCmd);
+		if (iRet != 0) {
+			oCmd.iRet = iRet;
+			oCmd.sData = "resp=Err happend!";
+		}
+
+		m_pMQManager->GetMsgQueue(NET_IO_BACK_MSQ_KEY,rpMsgq);
+		MsgBuf_T stMsg2;
+		stMsg.Reset();
+		stMsg2.lType = RESPONSE;
+
+		oCmd.ToString(stMsg2.sBuf,sizeof(stMsg2.sBuf));
+		rpMsgq->PutMsg(&stMsg2,strlen(stMsg2.sBuf));
+
+		RespNotify();
+	}
+
+	return 0;
+}
+
+
+int CContainerEventHandler::RegisterMqInfo(CMsgQManager* m_pMQManager, key_t iMqKey) {
+	m_pMQManager = m_pMQManager;
+	m_iMqKey = iMqKey;
+}
+
+int CContainerEventHandler::RegisterSvcDispatcher(int iCmd,CServiceDispatcher* pSvcDispatcher) {
+	m_mapPSvcDispatcher[iCmd] = pSvcDispatcher;
+}
 
 int CNetIOUserEventHandler::CheckEvent(void* pvParam) {
 	return 0;
@@ -191,6 +263,7 @@ int CTcpNetHandler::DoRecv(int iConn) {
 		}
 		++iCount;
 	}
+
 	/*
 	uint32_t dwCmd=0;
 	map<string,string> mapPara;
@@ -219,6 +292,7 @@ int CTcpNetHandler::DoRecv(int iConn) {
 	oCmd.ifamily=m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_family;
 	oCmd.sClientIp=inet_ntoa(m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_addr);
 	oCmd.iPort=m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_port;
+
 	//printf("dump cmdobj:%s\n",oCmd.ToString().c_str());
 	/*
 	iRet = m_pMQManager->GetMsgQueue(NET_IO_BACK_MSQ_KEY, rpMsgq);
