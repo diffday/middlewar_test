@@ -8,30 +8,51 @@
 #include "service_dispatcher.h"
 #include "global_define.h"
 
-CServiceDispatcher::CServiceDispatcher() : m_iCmd(0){}
 CServiceDispatcher::~CServiceDispatcher() {
-	list<IService*>::iterator it = listStatelessSvcQueue.begin();
-	for (;it != listStatelessSvcQueue.end(); ++it) {
-		delete (*it);
+	map<int,IService*>::iterator it = m_mapStatelessSvcQueue.begin();
+	for (;it != m_mapStatelessSvcQueue.end();) {
+		delete (it->second);
+		m_mapStatelessSvcQueue.erase(it++);
 	}
 
-	it = listStatefulSvcQueue.begin();
-	for (; it != listStatefulSvcQueue.end(); ++it) {
-		delete (*it);
+	it = m_mapStatefulSvcQueue.begin();
+	for (; it != m_mapStatefulSvcQueue.end();) {
+		delete (it->second);
+		m_mapStatefulSvcQueue.erase(it++);
 	}
 }
 
 int CServiceDispatcher::Dispatch(CCmd& oCmd) {
-	//listStatefulSvcQueue.
-	if (listStatelessSvcQueue.size() == 0) {
+	int iRet = 0;
+	if (oCmd.iSvcSerialNo) {
+		map<int,IService*>::iterator it = m_mapStatefulSvcQueue.begin();
+		for (;it != m_mapStatefulSvcQueue.begin(); ++it) {
+			if (oCmd.iSvcSerialNo == it->first) {
+				IService* pSvcHandler = it->second;
+				iRet = pSvcHandler->Execute(oCmd);
+				m_mapStatefulSvcQueue.erase(it);
+				m_mapStatelessSvcQueue[oCmd.iSvcSerialNo] = pSvcHandler;
+				return iRet;
+			}
+		}
+	}
+
+	if (m_mapStatelessSvcQueue.size() == 0) {
 		return NO_FREE_SVC_HANDLER;
 	}
-	IService* pSvcHandler = listStatelessSvcQueue.front();
-	listStatelessSvcQueue.pop_front();
 
-	return pSvcHandler->Execute(oCmd);
+
+	map<int,IService*>::iterator it = m_mapStatelessSvcQueue.begin();
+	IService* pSvcHandler = it->second;
+	oCmd.iSvcSerialNo = it->first;
+	m_mapStatelessSvcQueue.erase(it);
+
+	m_mapStatefulSvcQueue[oCmd.iSvcSerialNo] = pSvcHandler;
+	iRet = pSvcHandler->Execute(oCmd);
+	m_mapStatelessSvcQueue[oCmd.iSvcSerialNo] = pSvcHandler;
+	return iRet;
 }
 
 int CServiceDispatcher::AddSvcHandler(IService* pSvcHandler) {
-	listStatelessSvcQueue.push_back(pSvcHandler);
+	m_mapStatelessSvcQueue[m_count++] = pSvcHandler;
 }

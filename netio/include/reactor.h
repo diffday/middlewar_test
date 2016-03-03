@@ -173,7 +173,7 @@ private:
 
 	bool m_bInit;
 	static const int MAX_EPOLL_EVENT_NUM = 4096;
-	static const int DEFAULT_EPOLL_WAIT_TIME = 10;//毫秒
+	//static const int DEFAULT_EPOLL_WAIT_TIME = 10;//毫秒
 	int m_iEpFd;
 	epoll_event* m_arrEpollEvents; //用于方法间参数传递
 	int m_iEvents;

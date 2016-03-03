@@ -13,16 +13,19 @@
 using namespace std;
 class CServiceDispatcher {
 public:
-	list<IService*> listStatefulSvcQueue;
-	list<IService*> listStatelessSvcQueue;
+	map<int,IService*> m_mapStatefulSvcQueue;
+	map<int,IService*> m_mapStatelessSvcQueue;
 	int m_iCmd;
+
 
 	//队列认为是container关心的，分配器不拥有队列相关信息，交由container回写response到netio的队列
 	int Dispatch(CCmd& oCmd);//调用IService对象的Execute函数
 
 	int AddSvcHandler(IService*);
-	CServiceDispatcher();
+	CServiceDispatcher() :m_count(0),m_iCmd(0) {};
 	~CServiceDispatcher();
+private:
+	int m_count;
 };
 
 #endif /* NETIO_INCLUDE_SERVICE_DISPATCHER_H_ */

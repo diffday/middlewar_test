@@ -14,7 +14,7 @@ using namespace std;
 
 void printUsuage () {
 	printf("must input the index para\n");
-	printf("usuage:./container index(0|1)\n");
+	printf("usuage:./container index(1|2)\n");
 }
 
 int main(int argc, char** argv)
@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 		return 0;
 	}
 	int inputIndex = atoi(argv[1]);
-	if (inputIndex != 0 && inputIndex != 1) {
+	if (inputIndex != 1 && inputIndex != 2) {
 		printUsuage();
 		return 0;
 	}
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 	CReactor oReactor;
 	int iRet = oReactor.Init(0, NULL);
 
-	int iIndex = 0;
+	int iIndex = 1;
 	CServiceLoader oServiceLoader;
 	CServiceDispatcher oServiceDispatcher;
 	map<int,const char*>::const_iterator it =g_mapCmdDLL.begin();
@@ -45,17 +45,24 @@ int main(int argc, char** argv)
 			IServiceFactory* pIServiceFactory;
 			iRet = oServiceLoader.GetServiceFactory(it->first, pIServiceFactory);
 			assert(iRet == 0);
-			for (int i=0;i<100;++i) {
+			for (int i=0;i<5;++i) {
 				IService* pSvc = pIServiceFactory->Create();
 				oServiceDispatcher.AddSvcHandler(pSvc);
 			}
 
 			CContainerEventHandler* pContainerEventHandler = new CContainerEventHandler;
 			pContainerEventHandler->RegisterMqInfo(&oCMQManager,it->first);
-			pContainerEventHandler->RegisterSvcDispatcher(1,&oServiceDispatcher);
+			pContainerEventHandler->RegisterSvcDispatcher(inputIndex,&oServiceDispatcher);
 			oReactor.RegisterUserEventHandler(pContainerEventHandler);
 		}
 		++iIndex;
+	}
+	int pid = fork();
+	if (pid) {
+		printf("I'm the father process:%d\n",getpid());
+	}
+	else {
+		printf("child process:%d\n",getpid());
 	}
 	oReactor.RunEventLoop();
 

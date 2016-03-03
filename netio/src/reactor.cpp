@@ -35,7 +35,7 @@ int CContainerEventHandler::RespNotify() {
 		return -1;
 	}
 
-	char pSendBuf[2] = { 's', '\0' };
+	char pSendBuf[2] = { 'w', '\0' };
 	// Make Peer Addr
 	struct sockaddr_un stUNIXAddr;
 	memset(&stUNIXAddr, 0, sizeof(stUNIXAddr));
@@ -69,6 +69,11 @@ int CContainerEventHandler::OnEventFire(void* pvParam) {
 	int Len = 0;
 	int iret = rpMsgq->GetMsg(&stMsg,Len);
 	if (Len == 0) {
+		struct timeval tv;
+		tv.tv_sec = 0;
+		tv.tv_usec = DEFAULT_EPOLL_WAIT_TIME;
+
+		select(0,NULL,NULL,NULL,&tv); //纯纯的sleep
 		return 0;
 	}
 	else {
@@ -85,6 +90,11 @@ int CContainerEventHandler::OnEventFire(void* pvParam) {
 			oCmd.sData = "resp=Err happend!";
 		}
 
+		stringstream ss;
+		ss<<"resp=This is the resp from "<<oCmd.iCmd<< " by pid:" << getpid();
+
+		oCmd.sData = ss.str();
+
 		m_pMQManager->GetMsgQueue(NET_IO_BACK_MSQ_KEY,rpMsgq);
 		MsgBuf_T stMsg2;
 		stMsg.Reset();
@@ -95,6 +105,7 @@ int CContainerEventHandler::OnEventFire(void* pvParam) {
 
 		RespNotify();
 	}
+	printf("can't find:%d dispatcher\n",oCmd.iCmd);
 
 	return 0;
 }
@@ -258,8 +269,9 @@ int CTcpNetHandler::DoRecv(int iConn) {
 	CCmd oCmd;
 	oCmd.InitCCmd(buf);
 	assert(oCmd.iCmd);
-	int iIndex = oCmd.iCmd % g_mapCmdDLL.size();
-	int iCount = 0;
+	//int iIndex = oCmd.iCmd % g_mapCmdDLL.size();
+	int iIndex = oCmd.iCmd;
+	int iCount = 1; //更改为命令值对应so的编号的下标，这里当然容错没处理
 	for (std::map<int, const char*>::const_iterator it=g_mapCmdDLL.begin();it!=g_mapCmdDLL.end();++it) {
 		if (iIndex == iCount) {
 			iRet = m_pMQManager->GetMsgQueue(it->first, rpMsgq);
