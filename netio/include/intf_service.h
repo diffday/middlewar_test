@@ -8,12 +8,18 @@
 #ifndef NETIO_INCLUDE_INTF_SERVICE_H_
 #define NETIO_INCLUDE_INTF_SERVICE_H_
 #include "cmd_obj.h"
+#include "pth.h"
 
 class IService {
 public:
 	virtual int Execute(CCmd& oCmd) = 0; //执行结果，这里也用简化cmd来传递
+
 	virtual ~IService(){};
 	int m_iCmd;
+	pth_uctx_t m_uctx;
+	int Schedule() {
+		pth_uctx_create((pth_uctx_t *)&m_uctx);
+	}
 };
 
 class IServiceFactory {
