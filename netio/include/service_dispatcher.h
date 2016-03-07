@@ -10,6 +10,7 @@
 #include <list>
 #include "intf_service.h"
 #include "cmd_obj.h"
+#include "pth.h"
 using namespace std;
 class CServiceDispatcher {
 public:
@@ -17,6 +18,7 @@ public:
 	map<int,IService*> m_mapStatelessSvcQueue;
 	int m_iCmd;
 
+	//int
 
 	//队列认为是container关心的，分配器不拥有队列相关信息，交由container回写response到netio的队列
 	int Dispatch(CCmd& oCmd);//调用IService对象的Execute函数

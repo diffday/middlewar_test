@@ -3,6 +3,7 @@
 #include "reactor.h"
 #include <unistd.h>
 #include <iostream>
+#include "netio_user_event_handler.h"
 using namespace std;
 
 

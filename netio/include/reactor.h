@@ -11,8 +11,11 @@
 #include <sys/epoll.h>
 #include <stdio.h>
 #include <netinet/in.h>
-#include "msgq_manager.h"
-#include "service_dispatcher.h"
+//#include "msgq_manager.h"
+//#include "service_dispatcher.h"
+#include "intf_user_event_handler.h"
+#include "tcp_net_handler.h"
+#include "usock_udp_handler.h"
 using namespace std;
 
 class CReactor;
@@ -59,79 +62,6 @@ struct stTcpSockItem {
 		fd=0;
 		enEventFlag = NONE_FLAG;
 	}
-};
-
-class CUserEventHandler {
-public:
-	virtual ~CUserEventHandler() {};
-	virtual int OnEventFire(void* pvParam = 0) = 0;
-	virtual int CheckEvent(void* pvParam = 0) = 0;
-	CReactor* m_pReactor;
-};
-
-class CContainerEventHandler : public CUserEventHandler {
-public:
-	int OnEventFire(void* pvParam= 0);
-	int CheckEvent(void* pvParam= 0);
-	CMsgQManager* m_pMQManager;
-	key_t m_iMqKey;
-	map<int,CServiceDispatcher*> m_mapPSvcDispatcher;
-	int RegisterMqInfo(CMsgQManager* pMQManager, key_t iMqKey);
-	int RegisterSvcDispatcher(int iCmd,CServiceDispatcher* pSvcDispatcher);
-	int RespNotify();
-	~CContainerEventHandler(){};
-};
-
-class CNetIOUserEventHandler : public CUserEventHandler {
-public:
-	int OnEventFire(void* pvParam= 0);
-	int CheckEvent(void* pvParam= 0);
-	CMsgQManager* m_pMQManager;
-
-	int RegisterMqManager(CMsgQManager* m_pMQManager);
-	~CNetIOUserEventHandler(){};
-};
-
-
-class CNetHandler {
-public:
-	virtual ~CNetHandler() = 0;//定义虚析构是一个好习惯，好让父类有虚函数表入口。否则向上转型利用时，将不能享受多态的好处
-public:
-	virtual int HandleEvent(int iConn, int iType) = 0;
-};
-
-class CTcpNetHandler : public CNetHandler {
-public:
-	CTcpNetHandler();
-	~CTcpNetHandler();
-public:
-	int HandleEvent(int iConn, int iType);
-	int RegisterMqManager(CMsgQManager* m_pMQManager);
-private:
-	int DoConn(int iConn);
-	int DoRecv(int iConn);//mqmanager应该是reactor回调的成员，因为框架不关心事件处理细节
-	int DoSend(int iConn);
-	int DoClose(int iConn);
-
-public:
-	CReactor* m_pReactor;
-	CMsgQManager* m_pMQManager;
-};
-
-class CUSockUdpHandler : public CNetHandler {
-public:
-	CUSockUdpHandler();
-	~CUSockUdpHandler();
-public:
-	int HandleEvent(int iConn, int iType);
-private:
-	int DoConn(int iConn);
-	int DoRecv(int iConn);
-	int DoSend(int iConn);
-	int DoClose(int iConn);
-
-public:
-	CReactor* m_pReactor;
 };
 
 class CReactor {
