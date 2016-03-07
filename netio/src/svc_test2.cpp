@@ -36,3 +36,5 @@ int CSvcTest2::Execute(CCmd& oCmd) {
 IServiceFactory* InitSvrObjFactory(void) {
 	return (IServiceFactory*)new CSvcTest2Factory;
 }
+
+void process_service(void *cmdObj){}

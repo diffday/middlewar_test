@@ -11,6 +11,7 @@
 #define MAX_MSG_SIZE 1024
 #define MAX_QBYTES 1024* 100;
 #define DEFAULT_EPOLL_WAIT_TIME 10 //毫秒
+#define PTH_UCTX_STACK_SIZE 128*1024; //字节数
 #include <map>
 
 using namespace std;

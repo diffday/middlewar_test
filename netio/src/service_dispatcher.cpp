@@ -8,20 +8,6 @@
 #include "service_dispatcher.h"
 #include "global_define.h"
 
-CServiceDispatcher::~CServiceDispatcher() {
-	map<int,IService*>::iterator it = m_mapStatelessSvcQueue.begin();
-	for (;it != m_mapStatelessSvcQueue.end();) {
-		delete (it->second);
-		m_mapStatelessSvcQueue.erase(it++);
-	}
-
-	it = m_mapStatefulSvcQueue.begin();
-	for (; it != m_mapStatefulSvcQueue.end();) {
-		delete (it->second);
-		m_mapStatefulSvcQueue.erase(it++);
-	}
-}
-
 int CServiceDispatcher::Dispatch(CCmd& oCmd) {
 	int iRet = 0;
 	if (oCmd.iSvcSerialNo) {
