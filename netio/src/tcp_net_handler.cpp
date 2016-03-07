@@ -11,6 +11,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 //=====CTcpNetHandler start
 CTcpNetHandler::CTcpNetHandler() : m_pReactor(NULL) {}
