@@ -37,7 +37,8 @@ int main(int argc, char** argv)
 
 	int iIndex = 1;
 	CServiceLoader oServiceLoader;
-	CServiceDispatcher oServiceDispatcher;
+	//CServiceDispatcher oServiceDispatcher;
+	CServiceDispatcher* pServiceDispatcher = CServiceDispatcher::Instance();
 	map<int,const char*>::const_iterator it =g_mapCmdDLL.begin();
 	for (;it!=g_mapCmdDLL.end();++it) {
 		if (iIndex == inputIndex) {
@@ -48,12 +49,12 @@ int main(int argc, char** argv)
 			assert(iRet == 0);
 			for (int i=0;i<5;++i) {
 				IService* pSvc = pIServiceFactory->Create();
-				oServiceDispatcher.AddSvcHandler(pSvc);
+				pServiceDispatcher->AddSvcHandler(pSvc);
 			}
 
 			CContainerEventHandler* pContainerEventHandler = new CContainerEventHandler;
 			pContainerEventHandler->RegisterMqInfo(&oCMQManager,it->first);
-			pContainerEventHandler->RegisterSvcDispatcher(inputIndex,&oServiceDispatcher);
+			pContainerEventHandler->RegisterSvcDispatcher(inputIndex,pServiceDispatcher);
 			oReactor.RegisterUserEventHandler(pContainerEventHandler);
 		}
 		++iIndex;

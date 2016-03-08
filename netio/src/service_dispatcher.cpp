@@ -7,6 +7,7 @@
 
 #include "service_dispatcher.h"
 #include "global_define.h"
+CServiceDispatcher* CServiceDispatcher::pServiceDispatcher = NULL;
 
 int CServiceDispatcher::Dispatch(CCmd& oCmd) {
 	int iRet = 0;
@@ -34,6 +35,7 @@ int CServiceDispatcher::Dispatch(CCmd& oCmd) {
 	m_mapStatelessSvcQueue.erase(it);
 
 	m_mapStatefulSvcQueue[oCmd.iSvcSerialNo] = pSvcHandler;
+	//int pth_uctx_switch(pth_uctx_t uctx_from, pth_uctx_t uctx_to);
 	iRet = pSvcHandler->Execute(oCmd);
 	m_mapStatelessSvcQueue[oCmd.iSvcSerialNo] = pSvcHandler;
 	return iRet;
