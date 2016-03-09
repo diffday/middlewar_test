@@ -29,7 +29,7 @@ private:
 	int m_iUCTXStackSize;
 
 public:
-	virtual int Execute(CCmd& oCmd) = 0; //执行结果，这里也用简化cmd来传递
+	virtual int Execute(CCmd oCmd) = 0; //执行结果，这里也用简化cmd来传递
 
 	virtual ~IService(){};
 

@@ -18,7 +18,7 @@ public:
 		m_iCmd = 1;
 		printf("CSvcTest::construct\n");
 	}
-	int Execute(CCmd& oCmd);
+	int Execute(CCmd oCmd);
 };
 
 class CSvcTestFactory : public IServiceFactory{
@@ -27,7 +27,7 @@ class CSvcTestFactory : public IServiceFactory{
 	}
 };
 
-int CSvcTest::Execute(CCmd& oCmd) {
+int CSvcTest::Execute(CCmd oCmd) {
 	printf("CSvcTest::Execute\n");
 	return 0;
 }

@@ -19,7 +19,7 @@ public:
 	~CSvcTest2() {
 		printf("CSvcTest2::destruct\n");
 	}
-	int Execute(CCmd& oCmd);
+	int Execute(CCmd oCmd);
 };
 
 class CSvcTest2Factory : public IServiceFactory{
@@ -28,7 +28,7 @@ class CSvcTest2Factory : public IServiceFactory{
 	}
 };
 
-int CSvcTest2::Execute(CCmd& oCmd) {
+int CSvcTest2::Execute(CCmd oCmd) {
 	printf("CSvcTest2::Execute\n");
 	return 0;
 }
