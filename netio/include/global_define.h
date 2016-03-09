@@ -12,6 +12,7 @@
 #define MAX_QBYTES 1024* 100;
 #define DEFAULT_EPOLL_WAIT_TIME 10 //毫秒
 #define PTH_UCTX_STACK_SIZE 128*1024; //字节数
+#define UNFINISH_TASK_RET_FLAG 2000000000
 #include <map>
 
 using namespace std;

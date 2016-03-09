@@ -15,14 +15,15 @@
 extern "C"
 {
 #endif
-	void process_service(void *cmdObj);
+	void process_service(void *IService); //TODO 可以公共实现然后挪到container的编译结果中，然后so编译不用关心
 #ifdef __cplusplus
 }
 #endif
 
 class IService {
-private:
+public:
 	int m_iCmd;
+private:
 	pth_uctx_t m_uctx;
 	char* m_pUCTXStack;
 	int m_iUCTXStackSize;
@@ -34,7 +35,9 @@ public:
 
 	IService();
 
-	int Schedule(CCmd& oCmd);
+	int Schedule();
+
+	pth_uctx_t GetUCTX();
 
 };
 

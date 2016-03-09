@@ -72,9 +72,12 @@ int CContainerEventHandler::OnEventFire(void* pvParam) {
 	map<int,CServiceDispatcher*>::iterator it = m_mapPSvcDispatcher.find(oCmd.iCmd);
 	if (it != m_mapPSvcDispatcher.end()) {
 		int iRet = it->second->Dispatch(oCmd);
-		if (iRet != 0) {
+		if (iRet != 0 && iRet != UNFINISH_TASK_RET_FLAG) {
 			oCmd.iRet = iRet;
 			oCmd.sData = "resp=Err happend!";
+		}
+		else if (iRet == UNFINISH_TASK_RET_FLAG) { //未做完的任务等待再次被唤醒继续完成
+			return 0;
 		}
 
 		stringstream ss;
@@ -92,7 +95,9 @@ int CContainerEventHandler::OnEventFire(void* pvParam) {
 
 		RespNotify();
 	}
-	printf("can't find:%d dispatcher\n",oCmd.iCmd);
+	else {
+		printf("can't find:%d dispatcher\n",oCmd.iCmd);
+	}
 
 	return 0;
 }

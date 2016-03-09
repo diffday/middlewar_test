@@ -15,6 +15,7 @@ public:
 	}
 
 	CSvcTest() {
+		m_iCmd = 1;
 		printf("CSvcTest::construct\n");
 	}
 	int Execute(CCmd& oCmd);
@@ -34,5 +35,3 @@ int CSvcTest::Execute(CCmd& oCmd) {
 IServiceFactory* InitSvrObjFactory(void) {
 	return (IServiceFactory*)new CSvcTestFactory;
 }
-
-void process_service(void *cmdObj){}

@@ -19,6 +19,7 @@ private:
 	pth_uctx_t m_uctx;
 	//int m_iCmd;
 	static CServiceDispatcher* pServiceDispatcher;
+	CCmd m_oCurCmdObj;
 
 
 	map<int,IService*> m_mapStatefulSvcQueue;
@@ -46,6 +47,10 @@ public:
 
 	pth_uctx_t GetUCTX(){
 		return m_uctx;
+	}
+
+	CCmd& GetCmdObj() {
+		return m_oCurCmdObj;
 	}
 
 	static CServiceDispatcher* Instance() {

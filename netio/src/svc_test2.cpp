@@ -12,6 +12,7 @@
 class CSvcTest2: public IService {
 public:
 	CSvcTest2() {
+		m_iCmd = 2;
 		printf("CSvcTest2::construct\n");
 	}
 
@@ -36,5 +37,3 @@ int CSvcTest2::Execute(CCmd& oCmd) {
 IServiceFactory* InitSvrObjFactory(void) {
 	return (IServiceFactory*)new CSvcTest2Factory;
 }
-
-void process_service(void *cmdObj){}
