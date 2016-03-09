@@ -45,7 +45,7 @@ public:
 			pth_uctx_destroy(m_uctx);
 	}
 
-	pth_uctx_t GetUCTX(){
+	pth_uctx_t& GetUCTX(){
 		return m_uctx;
 	}
 
@@ -53,12 +53,7 @@ public:
 		return m_oCurCmdObj;
 	}
 
-	static CServiceDispatcher* Instance() {
-		if (pServiceDispatcher == NULL) {
-			pServiceDispatcher = new CServiceDispatcher();
-		}
-		return pServiceDispatcher;
-	}
+	static CServiceDispatcher* Instance();
 
 private:
 	CServiceDispatcher() :m_count(0) {

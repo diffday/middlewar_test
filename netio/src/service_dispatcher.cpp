@@ -63,3 +63,10 @@ int CServiceDispatcher::Dispatch(CCmd& oCmd) {
 int CServiceDispatcher::AddSvcHandler(IService* pSvcHandler) {
 	m_mapStatelessSvcQueue[m_count++] = pSvcHandler;
 }
+
+CServiceDispatcher* CServiceDispatcher::Instance() {
+	if (pServiceDispatcher == NULL) {
+		pServiceDispatcher = new CServiceDispatcher();
+	}
+	return pServiceDispatcher;
+}

@@ -51,20 +51,22 @@ struct pth_mctx_st {
 		//pth_uctx_make(m_uctx, m_pUCTX, m_nUCtxSize, NULL, process_service, (void *)this, CAPP->UCTX());
 	}
 
-int IService::Schedule(){
+void IService::Schedule(){
 	//int pth_uctx_make(pth_uctx_t uctx, char *sk_addr, size_t sk_size, const sigset_t *sigmask, void (*start_func)(void *), void *start_arg, pth_uctx_t uctx_after);
 	//pth_uctx_make(m_uctx,m_pUCTXStack,m_iUCTXStackSize,NULL,process_service,(void*)this,CServiceDispatcher::Instance()->GetUCTX());
 	pth_uctx_switch(m_uctx, CServiceDispatcher::Instance()->GetUCTX());
-	return 0;
+	//return 0;
 }
 
 
-pth_uctx_t IService::GetUCTX() {
+pth_uctx_t& IService::GetUCTX() {
 	return m_uctx;
 }
 
-void process_service(void *pIService){
+void process_service(void *pIService){ //start function 返回的时候其实是隐式切换的
 	IService* pService = (IService*)pIService;
 	printf("process_service::%d\n",pService->m_iCmd);
 	pService->Execute(CServiceDispatcher::Instance()->GetCmdObj());
+	//pIService->Schedule();
+	//pth_uctx_switch(m_uctx, CServiceDispatcher::Instance()->GetUCTX());
 }

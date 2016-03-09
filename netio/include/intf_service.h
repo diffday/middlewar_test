@@ -35,9 +35,9 @@ public:
 
 	IService();
 
-	int Schedule();
+	void Schedule();
 
-	pth_uctx_t GetUCTX();
+	pth_uctx_t& GetUCTX();
 
 };
 
