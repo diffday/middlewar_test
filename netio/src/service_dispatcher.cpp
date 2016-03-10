@@ -16,7 +16,8 @@ int CServiceDispatcher::Dispatch(CCmd& oCmd) {
 	int iRet = 0;
 	int iStateFulContinue = 0;
 	IService* pSvcHandler = NULL;
-	if (oCmd.iSvcSerialNo) {
+	if (oCmd.iType == RESPONSE) {
+	//if (oCmd.iSvcSerialNo) {
 		map<int,IService*>::iterator it = m_mapStatefulSvcQueue.begin();
 		for (;it != m_mapStatefulSvcQueue.begin(); ++it) {
 			if (oCmd.iSvcSerialNo == it->first) {

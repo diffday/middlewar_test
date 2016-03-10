@@ -41,6 +41,11 @@ enum errcode {
 	NO_FREE_SVC_HANDLER,
 };
 
+typedef enum {
+	REQUEST = 1, //msg的type不能接受0，所以用1起始
+	RESPONSE = 2,
+} MSGTYPE_t;
+
 static const int NET_IO_BACK_MSQ_KEY = 0xccccc;
 static const char* NET_IO_USOCK_PATH = "/tmp/app/0001/0001_0";
 static const int NETIO_PORT = 7890;

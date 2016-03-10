@@ -51,7 +51,7 @@ int CContainerEventHandler::OnEventFire(void* pvParam) {
 
 	MsgBuf_T stMsg;
 	stMsg.Reset();
-	stMsg.lType = REQUEST;
+	//stMsg.lType = REQUEST;
 
 	int Len = 0;
 	int iret = rpMsgq->GetMsg(&stMsg,Len);
@@ -81,15 +81,16 @@ int CContainerEventHandler::OnEventFire(void* pvParam) {
 		}
 
 		stringstream ss;
-		ss<<"resp=This is the resp from "<<oCmd.iCmd<< " by pid:" << getpid();
+		ss<<oCmd.sData<<" by pid:" << getpid();
 
 		oCmd.sData = ss.str();
 
 		m_pMQManager->GetMsgQueue(NET_IO_BACK_MSQ_KEY,rpMsgq);
 		MsgBuf_T stMsg2;
-		stMsg.Reset();
+		stMsg2.Reset();
 		stMsg2.lType = RESPONSE;
 
+		oCmd.iType = RESPONSE; //这里的设置没什么意义，因为netio不认这字段。走到这一步，都是方法调用全部做完了。
 		oCmd.ToString(stMsg2.sBuf,sizeof(stMsg2.sBuf));
 		rpMsgq->PutMsg(&stMsg2,strlen(stMsg2.sBuf));
 

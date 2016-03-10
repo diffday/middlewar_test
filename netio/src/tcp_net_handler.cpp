@@ -144,6 +144,7 @@ int CTcpNetHandler::DoRecv(int iConn) {
 	oCmd.ifamily=m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_family;
 	oCmd.sClientIp=inet_ntoa(m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_addr);
 	oCmd.iPort=m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_port;
+	oCmd.iType=REQUEST;
 
 	//printf("dump cmdobj:%s\n",oCmd.ToString().c_str());
 	/*

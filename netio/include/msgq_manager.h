@@ -16,11 +16,6 @@
 #include "global_define.h"
 using namespace std;
 
-typedef enum {
-	REQUEST = 1, //msg的type不能接受0，所以用1起始
-	RESPONSE = 2,
-} MSGTYPE_t;
-
 /**
  * 消息队列中的结构定义
  */

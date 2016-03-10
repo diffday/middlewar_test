@@ -18,6 +18,11 @@ void printUsuage () {
 	printf("usuage:./container index(1|2)\n");
 }
 
+CMsgQManager oCMQManager;
+CMsgQManager* GetMQManager() {
+	return &oCMQManager;
+}
+
 int main(int argc, char** argv)
 {
 	if (argc < 2) {
@@ -30,8 +35,12 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-	CMsgQManager oCMQManager;
+	//CMsgQManager oCMQManager;
 	oCMQManager.AddMsgQueue(NET_IO_BACK_MSQ_KEY);
+	map<int,const char*>::const_iterator it =g_mapCmdDLL.begin();
+	for (;it!=g_mapCmdDLL.end();++it) {
+		oCMQManager.AddMsgQueue(it->first);
+	}
 	CReactor oReactor;
 	int iRet = oReactor.Init(0, NULL);
 
@@ -39,10 +48,10 @@ int main(int argc, char** argv)
 	CServiceLoader oServiceLoader;
 	//CServiceDispatcher oServiceDispatcher;
 	CServiceDispatcher* pServiceDispatcher = CServiceDispatcher::Instance();
-	map<int,const char*>::const_iterator it =g_mapCmdDLL.begin();
+	it =g_mapCmdDLL.begin();
 	for (;it!=g_mapCmdDLL.end();++it) {
 		if (iIndex == inputIndex) {
-			oCMQManager.AddMsgQueue(it->first);
+			//oCMQManager.AddMsgQueue(it->first);
 			oServiceLoader.LoadSercie_i(it->first,it->second);
 			IServiceFactory* pIServiceFactory;
 			iRet = oServiceLoader.GetServiceFactory(it->first, pIServiceFactory);
