@@ -28,7 +28,7 @@ class CSvcTestFactory : public IServiceFactory{
 };
 
 int CSvcTest::Execute(CCmd& oCmd) {
-	printf("CSvcTest::Execute:%s\n",oCmd.sData.c_str());
+	printf("CSvcTest %d::Execute serno:%d data:%s\n",m_iIndex,oCmd.iSvcSerialNo,oCmd.sData.c_str());
 	oCmd.sData = "resp1=r1";
 	oCmd.iType = RESPONSE;
 	return 0;

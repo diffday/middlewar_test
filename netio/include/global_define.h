@@ -44,6 +44,7 @@ enum errcode {
 typedef enum {
 	REQUEST = 1, //msg的type不能接受0，所以用1起始
 	RESPONSE = 2,
+	APP = 3,
 } MSGTYPE_t;
 
 static const int NET_IO_BACK_MSQ_KEY = 0xccccc;

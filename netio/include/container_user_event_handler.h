@@ -11,6 +11,7 @@
 #include "intf_user_event_handler.h"
 #include "msgq_manager.h"
 #include "service_dispatcher.h"
+#include "cmd_obj.h"
 class CContainerEventHandler : public CUserEventHandler {
 public:
 	int OnEventFire(void* pvParam= 0);
@@ -22,6 +23,7 @@ public:
 	int RegisterSvcDispatcher(int iCmd,CServiceDispatcher* pSvcDispatcher);
 	int RespNotify();
 	~CContainerEventHandler(){};
+	int ProcessMsg(CCmd& oCmd);
 };
 
 

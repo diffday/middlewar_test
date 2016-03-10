@@ -9,13 +9,13 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-	CMsgQManager oCMQManager;
-	oCMQManager.AddMsgQueue(NET_IO_BACK_MSQ_KEY);
+	CMsgQManager* oCMQManager = CMsgQManager::GetInstance();
+	oCMQManager->AddMsgQueue(NET_IO_BACK_MSQ_KEY);
 
 
 	map<int,const char*>::const_iterator it =g_mapCmdDLL.begin();
 	for (;it!=g_mapCmdDLL.end();++it) {
-		oCMQManager.AddMsgQueue(it->first);
+		oCMQManager->AddMsgQueue(it->first);
 	}
 
 	//CServiceLoader oServiceLoader;
@@ -26,12 +26,12 @@ int main(int argc, char** argv)
 	int iRet = oReactor.Init(NETIO_PORT, NET_IO_USOCK_PATH);
 
 	CTcpNetHandler* oTcpNetHandler = new CTcpNetHandler;
-	oTcpNetHandler->RegisterMqManager(&oCMQManager);
+	oTcpNetHandler->RegisterMqManager(oCMQManager);
 
 	CUSockUdpHandler* oUsockUdpHandler = new CUSockUdpHandler;
 	//oUsockUdpHandler->RegisterMqManager(&oCMQManager);
 	CNetIOUserEventHandler* oNetIOUserHandler = new CNetIOUserEventHandler;
-	oNetIOUserHandler->RegisterMqManager(&oCMQManager);
+	oNetIOUserHandler->RegisterMqManager(oCMQManager);
 
 	oReactor.RegisterTcpNetHandler(oTcpNetHandler);
 	oReactor.RegisterUSockUdpHandler(oUsockUdpHandler);

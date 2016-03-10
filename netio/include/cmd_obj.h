@@ -24,7 +24,7 @@ public:
 	int    iPort;
 	std::string sData;
 	int iRet;
-	int iType; //区分是请求还是回应
+	int iType; //区分是请求还是回应，现在回头看有些多余，iSvcSerialNo !=0表示回应也够用
 
 	//返回格式化后的长度，iLen为buf的总长度
 	int ToString(char* pBuf, int iLen) {
@@ -49,6 +49,7 @@ public:
 		return string(ss.str());
 
 	}
+	//m_oCurCmdObj
 
 	int InitCCmd(char* pBuf) { //返回值可以用于区分是否字段齐全，demo实现就不搞那么严谨了
 		map<string,string> mapPara;

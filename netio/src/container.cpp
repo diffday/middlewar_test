@@ -18,11 +18,6 @@ void printUsuage () {
 	printf("usuage:./container index(1|2)\n");
 }
 
-CMsgQManager oCMQManager;
-CMsgQManager* GetMQManager() {
-	return &oCMQManager;
-}
-
 int main(int argc, char** argv)
 {
 	if (argc < 2) {
@@ -35,11 +30,11 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-	//CMsgQManager oCMQManager;
-	oCMQManager.AddMsgQueue(NET_IO_BACK_MSQ_KEY);
+	CMsgQManager* oCMQManager = CMsgQManager::GetInstance();
+	oCMQManager->AddMsgQueue(NET_IO_BACK_MSQ_KEY);
 	map<int,const char*>::const_iterator it =g_mapCmdDLL.begin();
 	for (;it!=g_mapCmdDLL.end();++it) {
-		oCMQManager.AddMsgQueue(it->first);
+		oCMQManager->AddMsgQueue(it->first);
 	}
 	CReactor oReactor;
 	int iRet = oReactor.Init(0, NULL);
@@ -48,6 +43,14 @@ int main(int argc, char** argv)
 	CServiceLoader oServiceLoader;
 	//CServiceDispatcher oServiceDispatcher;
 	CServiceDispatcher* pServiceDispatcher = CServiceDispatcher::Instance();
+	int pid = fork();
+	if (pid) {
+		printf("I'm the father process:%d\n",getpid());
+	}
+	else {
+		printf("child process:%d\n",getpid());
+	}
+	pid = getpid();
 	it =g_mapCmdDLL.begin();
 	for (;it!=g_mapCmdDLL.end();++it) {
 		if (iIndex == inputIndex) {
@@ -58,23 +61,27 @@ int main(int argc, char** argv)
 			assert(iRet == 0);
 			for (int i=0;i<5;++i) {
 				IService* pSvc = pIServiceFactory->Create();
+				int j = pid * 10 + i;
+				pSvc->SetIndex(j,inputIndex);
 				pServiceDispatcher->AddSvcHandler(pSvc);
 			}
 
 			CContainerEventHandler* pContainerEventHandler = new CContainerEventHandler;
-			pContainerEventHandler->RegisterMqInfo(&oCMQManager,it->first);
+			pContainerEventHandler->RegisterMqInfo(oCMQManager,it->first);
 			pContainerEventHandler->RegisterSvcDispatcher(inputIndex,pServiceDispatcher);
 			oReactor.RegisterUserEventHandler(pContainerEventHandler);
 		}
 		++iIndex;
 	}
+	/*
 	int pid = fork();
 	if (pid) {
 		printf("I'm the father process:%d\n",getpid());
 	}
 	else {
 		printf("child process:%d\n",getpid());
-	}
+	}*/
+
 	oReactor.RunEventLoop();
 
 	return 0;

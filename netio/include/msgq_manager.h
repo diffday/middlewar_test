@@ -54,14 +54,20 @@ private:
 };
 
 class CMsgQManager {
-public:
+private:
 	CMsgQManager();
-	~CMsgQManager();
-
+	static CMsgQManager* pMsgQManager;
 public:
 	int GetMsgQueue(int dwGroupId, CMsgQueue*& rpMsgq);
 	int delMsgQueue(int dwGroupId);
 	int AddMsgQueue(int dwGroupId);
+	~CMsgQManager();
+	static CMsgQManager* GetInstance() {
+		if (pMsgQManager == NULL) {
+			pMsgQManager = new CMsgQManager;
+		}
+		return pMsgQManager;
+	}
 
 private:
 	map<int, CMsgQueue*> m_mapGroupMsgqs;

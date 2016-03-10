@@ -23,6 +23,7 @@ extern "C"
 class IService {
 public:
 	int m_iCmd;
+	int m_iIndex;
 private:
 	pth_uctx_t m_uctx;
 	char* m_pUCTXStack;
@@ -38,6 +39,12 @@ public:
 	void Schedule();
 
 	pth_uctx_t& GetUCTX();
+
+	void SetIndex(int iIndex, int iCmd) {
+		m_iIndex = iIndex;
+		m_iCmd = iCmd;
+	}
+	void ResetUCTX();
 
 };
 

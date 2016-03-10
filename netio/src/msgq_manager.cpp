@@ -97,6 +97,8 @@ int CMsgQueue::PutMsg(const MsgBuf_T *pBuf, int dwBufLen) {
 	return 0;
 }
 
+CMsgQManager* CMsgQManager::pMsgQManager = NULL;
+
 int CMsgQManager::AddMsgQueue(int dwGroupId) {
 	int iRet = 0;
 	map<int, CMsgQueue*>::const_iterator it = m_mapGroupMsgqs.find(dwGroupId);
