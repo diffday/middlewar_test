@@ -31,7 +31,7 @@ int CNetIOUserEventHandler::OnEventFire(void* pvParam) {
 		return 0;
 	}
 
-	printf("get svc Msg lenth:%d,data is %s,error:%s\n",Len,stMsg.sBuf,rpMsgq->m_sLastErrMsg.c_str());
+	printf("---RESPONSE--- svc Msg lenth:%d,data is %s\n",Len,stMsg.sBuf);
 	CCmd oCmd;
 	printf("the cmd to string is:%s\n",oCmd.ToString().c_str());
 	oCmd.InitCCmd(stMsg.sBuf);

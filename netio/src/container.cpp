@@ -43,13 +43,18 @@ int main(int argc, char** argv)
 	CServiceLoader oServiceLoader;
 	//CServiceDispatcher oServiceDispatcher;
 	CServiceDispatcher* pServiceDispatcher = CServiceDispatcher::Instance();
-	int pid = fork();
-	if (pid) {
-		printf("I'm the father process:%d\n",getpid());
+	int pid = 0;
+	for (int k = 0; k<5;++k){
+		pid = fork();
+		if (pid) {
+			printf("I'm the father process:%d\n",getpid());
+		}
+		else {
+			printf("child process:%d\n",getpid());
+			break;
+		}
 	}
-	else {
-		printf("child process:%d\n",getpid());
-	}
+
 	pid = getpid();
 	it =g_mapCmdDLL.begin();
 	for (;it!=g_mapCmdDLL.end();++it) {
