@@ -45,7 +45,7 @@ int CTcpNetHandler::DoConn(int iConn) {
 	    perror("accept error");
 	    return -1;
 	}
-	printf("accept form %s:%d\n", inet_ntoa(stCliAddr.sin_addr), stCliAddr.sin_port);
+	printf("accept from %s:%d\n", inet_ntoa(stCliAddr.sin_addr), stCliAddr.sin_port);
 
 	int iCurrentFlag = 0;
 	iCurrentFlag = fcntl(iConnfd, F_GETFL, 0);

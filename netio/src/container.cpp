@@ -20,6 +20,7 @@ void printUsuage () {
 
 int main(int argc, char** argv)
 {
+	setbuf(stdout, NULL);
 	if (argc < 2) {
 		printUsuage();
 		return 0;

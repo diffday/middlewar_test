@@ -9,6 +9,7 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+	setbuf(stdout, NULL);
 	CMsgQManager* oCMQManager = CMsgQManager::GetInstance();
 	oCMQManager->AddMsgQueue(NET_IO_BACK_MSQ_KEY);
 
