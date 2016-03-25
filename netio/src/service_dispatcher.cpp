@@ -8,6 +8,7 @@
 #include "service_dispatcher.h"
 #include "global_define.h"
 #include "assert.h"
+#include <unistd.h>
 CServiceDispatcher* CServiceDispatcher::pServiceDispatcher = NULL;
 
 int CServiceDispatcher::Dispatch(CCmd& oCmd) {
@@ -21,7 +22,7 @@ int CServiceDispatcher::Dispatch(CCmd& oCmd) {
 	if (m_oCurCmdObj.iType == RESPONSE) {
 	//if (oCmd.iSvcSerialNo) {
 		map<int,IService*>::iterator it = m_mapStatefulSvcQueue.begin();
-		printf("stateful-size-%d\n",m_mapStatefulSvcQueue.size());
+		//printf("stateful-size-%d\n",m_mapStatefulSvcQueue.size());
 		for (;it != m_mapStatefulSvcQueue.end(); ++it) {
 			printf("stateful-find-%d\n",it->first);
 			if (m_oCurCmdObj.iSvcSerialNo == it->first) {
@@ -35,27 +36,27 @@ int CServiceDispatcher::Dispatch(CCmd& oCmd) {
 				//return iRet;
 			}
 		}
+		if (!iStateFulContinue) {
+			printf("can't find stateful %d in this process %d, stateful queue size:%d\n",m_oCurCmdObj.iSvcSerialNo,getpid(),m_mapStatefulSvcQueue.size());
+		}
 		assert(iStateFulContinue);
 	}
 	else {
 		if (m_mapStatelessSvcQueue.size() == 0 && iStateFulContinue == 0) {
 				return NO_FREE_SVC_HANDLER;
-			}
-			else {
-				map<int,IService*>::iterator it = m_mapStatelessSvcQueue.begin();
-				pSvcHandler = it->second;
+		}
+		else {
+			map<int,IService*>::iterator it = m_mapStatelessSvcQueue.begin();
+			pSvcHandler = it->second;
 				//m_oCurCmdObj.iSvcSerialNo = it->first;
-				m_mapStatelessSvcQueue.erase(it);
-				printf("--stateless service find:%d\n",pSvcHandler->m_iIndex);
+			m_mapStatelessSvcQueue.erase(it);
+			printf("--stateless service find:%d\n",pSvcHandler->m_iIndex);
 				//printf("--stateless service find:%d\n",pSvcHandler->m_iIndex);
-				m_mapStatefulSvcQueue[pSvcHandler->m_iIndex] = pSvcHandler;
+			m_mapStatefulSvcQueue[pSvcHandler->m_iIndex] = pSvcHandler;
 
-				assert(pth_uctx_switch(m_uctx, pSvcHandler->GetUCTX()));
-			}
+			assert(pth_uctx_switch(m_uctx, pSvcHandler->GetUCTX()));
+		}
 	}
-
-
-
 
 	printf("****back to main process******,data:%s\n",m_oCurCmdObj.ToString().c_str());
 	//int pth_uctx_switch(pth_uctx_t uctx_from, pth_uctx_t uctx_to);

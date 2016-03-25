@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 	//CServiceDispatcher oServiceDispatcher;
 	CServiceDispatcher* pServiceDispatcher = CServiceDispatcher::Instance();
 	int pid = 0;
-	for (int k = 0; k<15;++k){
+	for (int k = 0; k<5;++k){
 		pid = fork();
 		if (pid) {
 			printf("I'm the father process:%d\n",getpid());
@@ -65,9 +65,9 @@ int main(int argc, char** argv)
 			IServiceFactory* pIServiceFactory;
 			iRet = oServiceLoader.GetServiceFactory(it->first, pIServiceFactory);
 			assert(iRet == 0);
-			for (int i=0;i<5;++i) {
+			for (int i=0;i<25;++i) {
 				IService* pSvc = pIServiceFactory->Create();
-				int j = pid * 10 + i;
+				int j = pid * 100 + i;
 				pSvc->SetIndex(j,inputIndex);
 				pServiceDispatcher->AddSvcHandler(pSvc);
 			}

@@ -157,7 +157,9 @@ int CContainerEventHandler::ProcessMsg(CCmd& oCmd) {
 			int iRet = it->second->Dispatch(oCmd);
 			if (iRet != 0 && iRet != UNFINISH_TASK_RET_FLAG) {
 				oCmd.iRet = iRet;
-				oCmd.sData = "resp=Err happend!";
+				char szBuf [256] = {0};
+				snprintf(szBuf,sizeof(szBuf),"errCode=%d&resp=Err happend!",oCmd.iRet);
+				oCmd.sData = szBuf;
 			}
 			else if (iRet == UNFINISH_TASK_RET_FLAG) { //未做完的任务等待再次被唤醒继续完成
 				return 0;
@@ -181,7 +183,7 @@ int CContainerEventHandler::ProcessMsg(CCmd& oCmd) {
 				MsgBuf_T stMsg2;
 				stMsg2.Reset();
 				//iPid * 10 + APP
-				int iPid = (oCmd.iSvcSerialNo/10);
+				int iPid = (oCmd.iSvcSerialNo/100);
 				printf("calc msgtype pid:%d\n",iPid);
 				stMsg2.lType = iPid * 10 + APP;
 
