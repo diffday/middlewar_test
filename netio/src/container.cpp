@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 	//CServiceDispatcher oServiceDispatcher;
 	CServiceDispatcher* pServiceDispatcher = CServiceDispatcher::Instance();
 	int pid = 0;
-	for (int k = 0; k<5;++k){
+	for (int k = 0; k<15;++k){
 		pid = fork();
 		if (pid) {
 			printf("I'm the father process:%d\n",getpid());

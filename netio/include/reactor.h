@@ -22,9 +22,9 @@ class CReactor;
 
 typedef enum {
 	NONE_FLAG = 0,
-	TCP_CLIENT = 1,
-	TCP_SERVER_READ,
+	TCP_CLIENT = 1, //无实际意义
 	TCP_SERVER_ACCEPT,
+	TCP_SERVER_READ,
 	TCP_SERVER_SEND,
 	TCP_SERVER_CLOSE,
 	UDP_READ,
@@ -89,6 +89,7 @@ private:
 	int RemoveFromWatchList(int iFd);
 	int InitTcpSvr(int iTcpSvrPort);
 	int InitUSockUdpSvr(const char* pszUSockPath);
+	const char* GetEventFlag(int iFlag);
 
 private:
 	vector<int> m_vecFds;//clear和erase不释放空间，只是析构
@@ -113,6 +114,7 @@ private:
 	MsgBuf_T m_arrMsg[MAX_MSG_SIZE];
 	//stEpollItem m_MSG[MAX_EPOLL_EVENT_NUM];
 	//key_t iBackMsgKey;
+	const char* m_pszFlag[8];
 };
 
 

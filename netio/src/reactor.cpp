@@ -203,6 +203,15 @@ int CReactor::InitUSockUdpSvr(const char* pszUSockPath) {
 int CReactor::Init(int iTcpSvrPort, const char* pszUSockPath) {
 	int iRet = 0;
 
+	m_pszFlag[0] = "NONE_FLAG";
+	m_pszFlag[1] = "TCP_CLIENT";
+	m_pszFlag[2] = "TCP_SERVER_ACCEPT";
+	m_pszFlag[3] = "TCP_SERVER_READ";
+	m_pszFlag[4] = "TCP_SERVER_SEND";
+	m_pszFlag[5] = "TCP_SERVER_CLOSE";
+	m_pszFlag[6] = "UDP_READ";
+	m_pszFlag[7] = "UDP_SEND";
+
 	if (iTcpSvrPort) {
 		iRet = InitTcpSvr(iTcpSvrPort);
 		if (iRet) {
@@ -342,12 +351,14 @@ EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果�
 
 	//event.data.fd = iFd; //用自定义结构的ptr代替传统的fd来区分信息
 	if (pData != &m_arrTcpSock[iFd]) {
+		printf("pData != &m_arrTcpSock[%d]\n",iFd);
 		m_arrTcpSock[iFd].enEventFlag = pStTempSock->enEventFlag;
 		m_arrTcpSock[iFd].fd = iFd;
 		m_arrTcpSock[iFd].stSockAddr_in = pStTempSock->stSockAddr_in;
 		event.data.ptr = (void*)&m_arrTcpSock[iFd];
 	}
 	else {
+		printf("%d use pData direct\n",iFd);
 		event.data.ptr = pData;
 	}
 
@@ -357,10 +368,12 @@ EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果�
 	EPOLL_CTL_DEL：从epfd中删除一个fd；
 	 */
 	int op = EPOLL_CTL_ADD;
+	int iEpollAdd = 1;
 
 	for(vector<int>::iterator it2=m_vecFds.begin();it2 != m_vecFds.end(); ++it2) {
 		if ((*it2) == iFd) {
 			op = EPOLL_CTL_MOD;
+			iEpollAdd = 0;
 			break;
 		}
 	}
@@ -368,7 +381,7 @@ EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果�
 	/*int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)*/
 	int iRet = epoll_ctl(m_iEpFd, op, iFd, &event);
 	if (iRet <  0) {
-		printf("%d,error:%d,info:%s\n",iRet,errno,strerror(errno));
+		printf("epoll_ctl err %d,error:%d,info:%s\n",iRet,errno,strerror(errno));
 		return EPOLL_CNTL_FAILED;
 	}
 
@@ -376,14 +389,21 @@ EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果�
 		++m_iEvents;
 		m_vecFds.push_back(iFd);
 	}
-	printf("add fd,iEventCount:%d,op:%d\n",m_iEvents, emTodoOp);
+
+	printf("###watch fd %d,iEventCount:%d,op:%s,epollAct:%s\n",iFd,m_iEvents, GetEventFlag(emTodoOp),op == EPOLL_CTL_MOD ? "modify" : "add");
 
 	return 0;
 }
 
+const char* CReactor::GetEventFlag(int iFlag) {
+	return m_pszFlag[iFlag];
+}
+
 int  CReactor::RemoveFromWatchList(int iFd) {
+	//printf("###unwatch fd %d\n",iFd);
 	int iRet = epoll_ctl(m_iEpFd, EPOLL_CTL_DEL, iFd, NULL);
 	if (iRet <  0) {
+		printf("###unwatch fd %d failed,err %d\n",iFd,iRet);
 		return EPOLL_CNTL_FAILED;
 	}
 	vector<int>::iterator it = m_vecFds.begin();
@@ -394,6 +414,7 @@ int  CReactor::RemoveFromWatchList(int iFd) {
 			break;
 		}
 	}
+	printf("###unwatch fd %d，then m_vecFds count:%d,m_iEvents:%d\n",iFd,m_vecFds.size(),m_iEvents);
 
 	return 0;
 }
@@ -402,23 +423,27 @@ int  CReactor::RemoveFromWatchList(int iFd) {
  */
 int CReactor::CheckEvents() {
 
-	if (m_iEvents > 0) {//进程间通信也放入监听。当container有数据返回到来时，可发数据包及时唤醒
-		m_iEpollSucc = epoll_wait(m_iEpFd, m_arrEpollEvents, m_iEvents, DEFAULT_EPOLL_WAIT_TIME); //超时时间单位是毫秒
+	//if (m_iEvents > 0) {//进程间通信也放入监听。当container有数据返回到来时，可发数据包及时唤醒
+	//m_iEpollSucc = epoll_wait(m_iEpFd, m_arrEpollEvents, m_iEvents, DEFAULT_EPOLL_WAIT_TIME);
+		m_iEpollSucc = epoll_wait(m_iEpFd, m_arrEpollEvents, 100, DEFAULT_EPOLL_WAIT_TIME); //超时时间单位是毫秒
 		//printf("event count %d\n",m_iEpollSucc);
 		if (m_iEpollSucc < 0) { //出错的时候返回-1，可通过errno查看具体错误.否则返回可处理的IO个数
-			printf("event wait failed %d\n",m_iEpollSucc);
+			printf("###event wait failed %d\n",m_iEpollSucc);
 			m_iEpollSucc = 0;;
 		}
 		else if (m_iEpollSucc > 0){
-			printf("event count %d\n",m_iEpollSucc);
+			printf("###event count %d\n",m_iEpollSucc);
+		}
+		else {
+			//printf("nothing to do socket event,m_nEvent:%d\n",m_iEvents);
 		}
 
 		return m_iEpollSucc;
-	}
-	else {
+	//}
+	//else {
 		//printf("nothing to do socket event,m_nEvent:%d\n",m_iEvents);
-	}
-
+	//}
+/*
 	if (m_pUserEventHandler) {
 		int iRet = m_pUserEventHandler->CheckEvent();
 
@@ -428,7 +453,7 @@ int CReactor::CheckEvents() {
 		}
 
 		return iRet;
-	}
+	}*/
 
 	//return m_iEvents | 1;
 
@@ -459,6 +484,7 @@ int CReactor::ProcessEvent() {
 
 		 //TODO 这里的UDP处理不完善
 		stTcpSockItem* stItem =	reinterpret_cast<stTcpSockItem*>(m_arrEpollEvents[i].data.ptr);
+		printf("###event from fd %d,eventFlag:%s\n",stItem->fd,GetEventFlag(stItem->enEventFlag));
 		if ((m_arrEpollEvents[i].events & EPOLLRDHUP) == EPOLLRDHUP) { //客户端关闭
 			if (stItem->enEventFlag != UDP_READ	|| stItem->enEventFlag != UDP_SEND) {
 				int iRet = m_pTcpNetHandler->HandleEvent(stItem->fd,TCP_SERVER_CLOSE);

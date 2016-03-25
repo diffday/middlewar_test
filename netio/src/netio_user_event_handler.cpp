@@ -49,6 +49,7 @@ int CNetIOUserEventHandler::OnEventFire(void* pvParam) {
 	stSock.stSockAddr_in.sin_port = oCmd.iPort;
 	stSock.stSockAddr_in.sin_addr.s_addr = inet_addr(oCmd.sClientIp.c_str());
 	stSock.stSockAddr_in.sin_family = oCmd.ifamily;
+	//m_pReactor->m_arrTcpSock[stSock.fd] = stSock;
 	/*
 	stSock.fd = ifd;
 	stSock.enEventFlag = TCP_SERVER_SEND;
@@ -59,7 +60,8 @@ int CNetIOUserEventHandler::OnEventFire(void* pvParam) {
 	stSock.stSockAddr_in.sin_addr.s_addr = inet_addr(clientIp.c_str());
 	stSock.stSockAddr_in.sin_family = family;*/
 
-	m_pReactor->AddToWatchList(oCmd.iFd,TCP_SERVER_SEND,&stSock);
+	//m_pReactor->AddToWatchList(oCmd.iFd,TCP_SERVER_SEND,(void*)(&(m_pReactor->m_arrTcpSock[stSock.fd])));
+	m_pReactor->AddToWatchList(oCmd.iFd,TCP_SERVER_SEND,&stSock); //AddToWatchList还有socket比对，所以传入的stSock是临时变量而不是m_pReactor->m_arrTcpSock的值
 	//snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+1,"%s",buf);
 
 	return 0;

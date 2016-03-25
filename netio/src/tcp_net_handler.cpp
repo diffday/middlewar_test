@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 //=====CTcpNetHandler start
 CTcpNetHandler::CTcpNetHandler() : m_pReactor(NULL) {}
@@ -39,13 +40,22 @@ int CTcpNetHandler::HandleEvent(int iConn, int iType) {
 int CTcpNetHandler::DoConn(int iConn) {
 	struct sockaddr_in stCliAddr;
 	socklen_t socklen = sizeof(stCliAddr);
+	int i = 0;
+	while (1) {
+
 	int iConnfd = accept(iConn, (struct sockaddr *)&stCliAddr,&socklen);
 	if (iConnfd < 0)
 	{
-	    perror("accept error");
+		if (iConnfd == -1 && (errno == EAGAIN)) {
+			printf("all conn request has accepted\n");
+			//all conn request has accepted
+			return 0;
+		}
+		perror("accept error");
 	    return -1;
 	}
-	printf("accept from %s:%d\n", inet_ntoa(stCliAddr.sin_addr), stCliAddr.sin_port);
+	++i;
+
 
 	int iCurrentFlag = 0;
 	iCurrentFlag = fcntl(iConnfd, F_GETFL, 0);
@@ -60,7 +70,7 @@ int CTcpNetHandler::DoConn(int iConn) {
 		return FCNTL_SOCKET_FAILED;
 	}
 
-	printf("==do on conn operation==, the conn fd is :%d\n",iConnfd);
+	printf("###DoConn %d accept from %s:%d,the conn fd is :%d\n", i,inet_ntoa(stCliAddr.sin_addr), stCliAddr.sin_port,iConnfd);
 
 	stTcpSockItem stTcpSock;
 	stTcpSock.fd = iConnfd;
@@ -70,6 +80,7 @@ int CTcpNetHandler::DoConn(int iConn) {
 
 	m_pReactor->AddToWatchList(iConnfd, TCP_SERVER_READ, (void*)(&(m_pReactor->m_arrTcpSock[iConnfd])));
 
+	}
 	return 0;
 }
 
@@ -184,7 +195,7 @@ int CTcpNetHandler::DoClose(int iConn) {
 	m_pReactor->m_arrTcpSock[iConn].Reset();
 	m_pReactor->RemoveFromWatchList(iConn);
 	int i = close(iConn);
-	printf("close %d,i:%d\n",iConn,i);
+	printf("###DoClose %d,errcode:%d\n",iConn,i);
 
 	return 0;
 }

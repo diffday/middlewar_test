@@ -49,7 +49,7 @@ int CServiceDispatcher::Dispatch(CCmd& oCmd) {
 				printf("--stateless service find:%d\n",pSvcHandler->m_iIndex);
 				//printf("--stateless service find:%d\n",pSvcHandler->m_iIndex);
 				m_mapStatefulSvcQueue[pSvcHandler->m_iIndex] = pSvcHandler;
-				printf("--9999999999\n",pSvcHandler->m_iIndex);
+
 				assert(pth_uctx_switch(m_uctx, pSvcHandler->GetUCTX()));
 			}
 	}
