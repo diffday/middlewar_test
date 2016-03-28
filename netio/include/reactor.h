@@ -115,7 +115,6 @@ private:
 	//stEpollItem m_MSG[MAX_EPOLL_EVENT_NUM];
 	//key_t iBackMsgKey;
 	const char* m_pszFlag[8];
-#include "cache_manager.h"
 };
 
 

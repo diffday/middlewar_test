@@ -12,8 +12,8 @@
 #include "service_dispatcher.h"
 #include <unistd.h>
 //#include <stdlib.h>
+
 #include "cache_manager.h"
-#include <sstream>
 
 class CSvcTest2: public IService {
 public:
@@ -78,8 +78,8 @@ int CSvcTest2::GetResponse(CCmd& oCmd) {
 }
 
 int CSvcTest2::Execute(CCmd& oCmd) {
-	printf("CSvcTest2::Execute\n");
 	printf("CSvcTest2 %d::Execute serno:%d data:%s\n",m_iIndex,oCmd.iSvcSerialNo,oCmd.ToString().c_str());
+
 	CCacheManager* pCm =  CCacheManager::GetInstance();
 	int processStatIndex = (m_iIndex / 100)%100; //取进程号的后两尾数
 	stringstream ss;
