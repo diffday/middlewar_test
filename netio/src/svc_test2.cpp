@@ -12,6 +12,8 @@
 #include "service_dispatcher.h"
 #include <unistd.h>
 //#include <stdlib.h>
+#include "cache_manager.h"
+#include <sstream>
 
 class CSvcTest2: public IService {
 public:
@@ -78,6 +80,11 @@ int CSvcTest2::GetResponse(CCmd& oCmd) {
 int CSvcTest2::Execute(CCmd& oCmd) {
 	printf("CSvcTest2::Execute\n");
 	printf("CSvcTest2 %d::Execute serno:%d data:%s\n",m_iIndex,oCmd.iSvcSerialNo,oCmd.ToString().c_str());
+	CCacheManager* pCm =  CCacheManager::GetInstance();
+	int processStatIndex = (m_iIndex / 100)%100; //取进程号的后两尾数
+	stringstream ss;
+	ss<<"c2_"<<processStatIndex;
+	pCm->Incr(ss.str(),1);
 
 	//从主进程切回来，因为期间主进程收到了新的数据包，ocmd指向的已经是新数据包，而非堆栈切出去之前的数据。这也符合语言的定义，毕竟同一
 	//进程中引用的存储空间内容变化了。用户态堆栈也不能打破这个逻辑或自动备份，因为那样违反了基本的编程模型和语义。

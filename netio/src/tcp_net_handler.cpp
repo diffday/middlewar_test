@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include "cache_manager.h"
 
 //=====CTcpNetHandler start
 CTcpNetHandler::CTcpNetHandler() : m_pReactor(NULL) {}
@@ -85,6 +86,11 @@ int CTcpNetHandler::DoConn(int iConn) {
 }
 
 int CTcpNetHandler::DoRecv(int iConn) {
+	CCacheManager* pCm =  CCacheManager::GetInstance();
+		stringstream ss;
+		ss<<"netio_"<<0;
+		pCm->Incr(ss.str(),1);
+
 	int nread;
 	char buf[1000] = {0};
 	int iRet = 0;

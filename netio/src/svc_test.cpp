@@ -7,6 +7,7 @@
 #include "intf_service.h"
 #include "svc_base.h"
 #include "cmd_obj.h"
+#include "cache_manager.h"
 
 class CSvcTest: public IService {
 public:
@@ -29,6 +30,12 @@ class CSvcTestFactory : public IServiceFactory{
 
 int CSvcTest::Execute(CCmd& oCmd) {
 	printf("CSvcTest %d::Execute serno:%d data:%s\n",m_iIndex,oCmd.iSvcSerialNo,oCmd.sData.c_str());
+	CCacheManager* pCm =  CCacheManager::GetInstance();
+		int processStatIndex = (m_iIndex / 100)%100; //取进程号的后两尾数
+		stringstream ss;
+		ss<<"c1_"<<processStatIndex;
+		pCm->Incr(ss.str(),1);
+
 	oCmd.sData = "resp1=r1";
 	oCmd.iType = RESPONSE;
 	return 0;

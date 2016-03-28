@@ -49,7 +49,13 @@ typedef enum {
 
 static const int NET_IO_BACK_MSQ_KEY = 0xccccc;
 static const char* NET_IO_USOCK_PATH = "/tmp/app/0001/0001_0";
+static const char* CACHE_PATH = "/tmp/shm/cache";
 static const int NETIO_PORT = 6789;
+static const int CACHE_SIZE = 40960;
+static const int CONTAINER_1_PROCESS_NUM = 6;
+static const int CONTAINER_1_UTHREAD_NUM_PER_PROCESS = 30;
+static const int CONTAINER_2_PROCESS_NUM = 5;
+static const int CONTAINER_2_UTHREAD_NUM_PER_PROCESS = 25;
 
 static const std::map<int, const char*>::value_type init_cmd_dll_value[] =
 {
