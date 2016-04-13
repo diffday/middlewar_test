@@ -87,9 +87,9 @@ int CTcpNetHandler::DoConn(int iConn) {
 
 int CTcpNetHandler::DoRecv(int iConn) {
 	CCacheManager* pCm =  CCacheManager::GetInstance();
-		stringstream ss;
-		ss<<"netio_"<<0;
-		pCm->Incr(ss.str(),1);
+	stringstream ss;
+	ss<<"netio_"<<0;
+	pCm->Incr(ss.str(),1);
 
 	int nread;
 	char buf[1000] = {0};
@@ -174,20 +174,13 @@ int CTcpNetHandler::DoRecv(int iConn) {
 
 	oCmd.ToString(stMsg.sBuf,sizeof(stMsg.sBuf));
 
-	//snprintf(stMsg.sBuf,strlen(stMsg.sBuf)+100,"fd=%d&family=%d&cliIp=%s&cliPort=%d&%s",iConn,m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_family,inet_ntoa(m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_addr),m_pReactor->m_arrTcpSock[iConn].stSockAddr_in.sin_port,buf);
-
-
 	iRet = rpMsgq->PutMsg(&stMsg,strlen(stMsg.sBuf));
 	if (0 != iRet) {
 		printf("putinto msgq failed,%d,%s\n",iRet,rpMsgq->m_sLastErrMsg.c_str());
 	}
 
-	m_pReactor->m_arrTcpSock[iConn].enEventFlag = TCP_SERVER_SEND; //
+	m_pReactor->m_arrTcpSock[iConn].enEventFlag = TCP_SERVER_SEND;
 
-	//m_pReactor->AddToWatchList();
-
-	//write(iConn, buf, nread);//响应客户端
-	//m_pReactor->RemoveFromWatchList(iConn);
 	return 0;
 }
 
