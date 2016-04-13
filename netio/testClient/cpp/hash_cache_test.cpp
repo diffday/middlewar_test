@@ -12,10 +12,6 @@ int main()
 	//cm.Initalize();
 	string key="c1_1";
 	//std::cout<<pcm->Incr(key,17)<<std::endl;
-	//int out=0;
-	//cout<<typeid(1).name()<<endl;
-	//cout<<typeid(1l).name()<<endl;
-	//cout<<typeid(1.0f).name()<<endl;
 
 	//std::cout<<pcm->Get(key,out)<<std::endl;
 	//std::cout<<"read:"<<out<<endl;

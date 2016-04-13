@@ -11,8 +11,6 @@
 #include <sys/epoll.h>
 #include <stdio.h>
 #include <netinet/in.h>
-//#include "msgq_manager.h"
-//#include "service_dispatcher.h"
 #include "intf_user_event_handler.h"
 #include "tcp_net_handler.h"
 #include "usock_udp_handler.h"
@@ -113,7 +111,7 @@ private:
 	stTcpSockItem m_arrTcpSock[MAX_EPOLL_EVENT_NUM]; //用于epoll信息的保存
 	MsgBuf_T m_arrMsg[MAX_MSG_SIZE];
 	//stEpollItem m_MSG[MAX_EPOLL_EVENT_NUM];
-	//key_t iBackMsgKey;
+
 	const char* m_pszFlag[8];
 };
 
