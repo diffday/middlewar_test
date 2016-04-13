@@ -12,12 +12,12 @@
 class CSvcTest: public IService {
 public:
 	~CSvcTest() {
-		printf("CSvcTest::destruct\n");
+		//printf("CSvcTest::destruct\n");
 	}
 
 	CSvcTest() {
 		m_iCmd = 1;
-		printf("CSvcTest::construct\n");
+		//printf("CSvcTest::construct\n");
 	}
 	int Execute(CCmd& oCmd);
 };

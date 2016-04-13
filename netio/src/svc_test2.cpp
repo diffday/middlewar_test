@@ -19,11 +19,11 @@ class CSvcTest2: public IService {
 public:
 	CSvcTest2() {
 		m_iCmd = 2;
-		printf("CSvcTest2::construct\n");
+		//printf("CSvcTest2::construct\n");
 	}
 
 	~CSvcTest2() {
-		printf("CSvcTest2::destruct\n");
+		//printf("CSvcTest2::destruct\n");
 	}
 	int Execute(CCmd& oCmd);
 	int SendRequest(CCmd& oCmd);
