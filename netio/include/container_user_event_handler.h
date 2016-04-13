@@ -12,21 +12,20 @@
 #include "msgq_manager.h"
 #include "service_dispatcher.h"
 #include "cmd_obj.h"
-class CContainerEventHandler : public CUserEventHandler {
+class CContainerEventHandler: public CUserEventHandler {
 public:
-	int OnEventFire(void* pvParam= 0);
-	int CheckEvent(void* pvParam= 0);
+	int OnEventFire(void* pvParam = 0);
+	int CheckEvent(void* pvParam = 0);
 	CMsgQManager* m_pMQManager;
 	key_t m_iMqKey;
-	map<int,CServiceDispatcher*> m_mapPSvcDispatcher;
+	map<int, CServiceDispatcher*> m_mapPSvcDispatcher;
 	int RegisterMqInfo(CMsgQManager* pMQManager, key_t iMqKey);
-	int RegisterSvcDispatcher(int iCmd,CServiceDispatcher* pSvcDispatcher);
+	int RegisterSvcDispatcher(int iCmd, CServiceDispatcher* pSvcDispatcher);
 	int RespNotify();
-	~CContainerEventHandler(){};
+	~CContainerEventHandler() {
+	}
+	;
 	int ProcessMsg(CCmd& oCmd);
 };
-
-
-
 
 #endif /* NETIO_INCLUDE_CONTAINER_USER_EVENT_HANDLER_H_ */
