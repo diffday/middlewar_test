@@ -12,7 +12,7 @@
 #include "cmd_obj.h"
 #include "pth.h"
 using namespace std;
-class CServiceDispatcher { //做成单例类
+class CServiceDispatcher {
 
 private:
 	int m_count;
