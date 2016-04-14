@@ -12,7 +12,8 @@
 class CSvcTest: public IService {
 public:
 	~CSvcTest() {
-		//printf("CSvcTest::destruct###\n");
+
+		//printf("CSvcTest::destruct!!!\n");
 	}
 
 	CSvcTest() {
