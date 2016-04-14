@@ -59,9 +59,6 @@ static const int CONTAINER_2_UTHREAD_NUM_PER_PROCESS = 25;
 
 static const std::map<int, const char*>::value_type init_cmd_dll_value[] =
 {
-//std::map<int, const char*>::value_type( 0xccccd, "/home/chenzhuo/test/middlewar_test/netio/so/libverto.so.0.0"),
-//std::map<int, const char*>::value_type( 0xcccce, "/home/chenzhuo/test/middlewar_test/netio/so/libXxf86vm.so.1.0.0")
-
 std::map<int, const char*>::value_type( 0xccccd, "./so/svc_test.so"),
 std::map<int, const char*>::value_type( 0xcccce, "./so/svc_test2.so")
 };
