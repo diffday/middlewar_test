@@ -68,7 +68,7 @@ int CServiceDispatcher::Dispatch(CCmd& oCmd) {
 			if (it != m_mapStatefulSvcQueue.end()) {
 				m_mapStatefulSvcQueue.erase(it);
 			}
-			pSvcHandler->ResetUCTX();
+			pSvcHandler->ResetUCTX();//每次ucontext使用完后，因为栈指针等没有复位，必须重新调用pth_uctx_make重置上下文信息，否则可能遭遇SIGSEGV错误
 			printf("--statful back stateless service :%d\n",pSvcHandler->m_iIndex);
 			m_mapStatelessSvcQueue[pSvcHandler->m_iIndex] = pSvcHandler;
 		}
